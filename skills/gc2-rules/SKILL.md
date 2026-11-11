@@ -5,7 +5,7 @@ description: Global hard rules for any work involving GC2 (Geo Compute Cloud) Ba
 
 # GC2 BaaS Core Rules
 
-> Last updated: 2026-10-07
+> Last updated: 2026-11-11
 
 This skill only contains global hard rules. Task-specific guidance lives in the other `gc2-*` skills (see section 6).
 
@@ -62,6 +62,7 @@ Use the minimal matching skill(s) below for each task:
 - Map view config and layer styling (classes/styles/labels): `gc2-map-styling`
 - Sub-user privileges and rights inheritance: `gc2-privileges`
 - Key/value store (app state, flags, preferences): `gc2-keyvalue`
+- Vidi configurations (manage, publish, anonymous `.json` for Vidi): `gc2-configurations`
 - Feature CRUD as GeoJSON by primary key: `gc2-feature`
 - Scheduled/automated data imports (cron jobs, runs): `gc2-scheduler`
 - Parquet/FlatGeobuf snapshot exports and analytics reads: `gc2-snapshots`

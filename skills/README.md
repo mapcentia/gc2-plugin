@@ -19,6 +19,7 @@ Use the smallest matching skill set for the task.
 | `gc2-map-styling` | Configuring map center/zoom/extent or layer cartography: classes, styles, labels |
 | `gc2-privileges` | Granting sub-user privileges, groups, rights inheritance, layer authentication levels |
 | `gc2-keyvalue` | Storing/reading JSON state (settings, flags, preferences) in the key/value store |
+| `gc2-configurations` | Managing Vidi configurations (Dashboard "Configurations") and the anonymous published `.json` for Vidi |
 | `gc2-feature` | Reading/creating/updating/deleting single features as GeoJSON by primary key |
 | `gc2-scheduler` | Automated/cron data imports: scheduler jobs and runs, manual start/stop, monitoring |
 | `gc2-snapshots` | Parquet/FlatGeobuf exports of relations and reading published snapshots (DuckDB) |

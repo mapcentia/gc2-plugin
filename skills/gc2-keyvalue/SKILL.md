@@ -49,4 +49,5 @@ Standalone class, explicit-client pattern: `new Keyvalue(client.http)`. Methods 
 | `like=`/`filter=` query params on v4 | v2-only; v4 lists everything visible, filter client-side |
 | Expecting `200` from PATCH | Returns `303 See Other` — disable auto-redirect |
 | Expecting `403` when touching another user's key | Non-owned rows are invisible to writes → `404 KEY_NOT_FOUND` |
+| Writing Vidi configurations (`configuration_*` keys) through keyvalue | Rows created here get an owner and are invisible to the Configurations API — use `gc2-configurations` |
 | Using `@centia-io/sdk` <= 0.2.9 for Keyvalue | The `Keyvalue` class ships in `@mapcentia/gc2-sdk` 0.3.0+ (and `@centia-io/sdk` 0.2.10+) |
