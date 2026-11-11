@@ -9,7 +9,7 @@ Use this skill for the v4 Configurations API (`/api/v4/configurations`): managin
 
 ## Availability
 
-Implemented on the GeoCloud2 branch `feat/configurations-v4` (commit `d74dd38e`). As of 2026-11 it is **not merged, not released and not on production `api.gc2.io`** — assume dev-only and expect `404`/`406` elsewhere. MCP tools ship in the `@mapcentia/gc2-mcp-server` release after 1.1.0; the SDK `Configurations` class in the `@mapcentia/gc2-sdk` release after 0.3.1.
+Implemented on the GeoCloud2 branch `feat/configurations-v4` (commit `d74dd38e`). As of 2026-11 it is **not merged, not released and not on production `api.gc2.io`** — assume dev-only and expect `404`/`406` elsewhere. MCP tools ship in `@mapcentia/gc2-mcp-server` 1.2.0+; the SDK `Configurations` class in the `@mapcentia/gc2-sdk` release after 0.3.1.
 
 ## Resource
 
