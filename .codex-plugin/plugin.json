@@ -29,6 +29,11 @@
       "Read",
       "Write"
     ],
+    "defaultPrompt": [
+      "List the schemas and tables in my GC2 database",
+      "Import this GeoJSON file into a new GC2 table",
+      "Build a map app on my GC2 data with the SDK"
+    ],
     "websiteURL": "https://gc2.io",
     "supportURL": "https://github.com/mapcentia/gc2-plugin/issues",
     "composerIcon": "./assets/logo.svg",
