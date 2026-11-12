@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "gc2",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "description": "GC2 (Geo Compute Cloud): the GC2 MCP server (tools generated from the GC2 OpenAPI spec) plus skills covering runtime SDK usage, provisioning, JSON-RPC, auth, OGC/OWS services, snapshots, scheduler, realtime and delivery rules.",
   "author": {
     "name": "MapCentia",
