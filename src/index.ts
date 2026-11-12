@@ -22,6 +22,9 @@ import {
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const apiSpecPath = path.join(__dirname, "..", "centia-api.json");
 const apiSpec = JSON.parse(fs.readFileSync(apiSpecPath, "utf-8"));
+const {version: packageVersion} = JSON.parse(
+    fs.readFileSync(path.join(__dirname, "..", "package.json"), "utf-8")
+);
 
 const DEFAULT_HOST = "https://api.gc2.io";
 const tokenStore = createConfigstoreTokenStore("gc2-env"); // shared with gc2-cli
@@ -57,7 +60,7 @@ async function getAccessToken(): Promise<string> {
 const server = new Server(
     {
         name: "gc2-mcp-server",
-        version: "1.0.0",
+        version: packageVersion,
     },
     {
         capabilities: {
