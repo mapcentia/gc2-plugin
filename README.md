@@ -159,6 +159,22 @@ codex plugin list --marketplace mapcentia
 
 For MCP tools alone, without the bundled skills, use `codex mcp add gc2 -- npx -y @mapcentia/gc2-mcp-server@1.2.2` instead of installing the plugin.
 
+## Using as a Mistral Vibe plugin
+
+The Vibe plugin bundles the same GC2 MCP server and skills as the Claude Code and Codex plugins. Vibe reads the [Agent Plugins 1.0](https://agent-plugins.org/specification) format: `plugin.json` and `mcp.json` in the repository root, plus the shared `skills/` folder. See the [Mistral Vibe plugin documentation](https://docs.mistral.ai/vibe/code/cli/plugins). Plugin support in Vibe is experimental and the format may change.
+
+Vibe has no install command for plugins yet, so clone the repository into a plugins directory. For all projects (user scope):
+
+```bash
+git clone https://github.com/mapcentia/gc2-plugin ~/.vibe/plugins/gc2
+```
+
+For a single project, clone it into `.vibe/plugins/gc2` in that project instead. Project plugins load only when the folder is trusted.
+
+Run `gc2 login` once (see Authentication above), then start Vibe or run `/reload-plugins` in a running session. Use `/plugins` to check that `gc2` is loaded. The skills are available as `/gc2:gc2-rules`, `/gc2:gc2-ows`, etc.
+
+To update, run `git pull` in the plugin directory followed by `/reload-plugins`.
+
 ## Using Skills with AI Coding Agents
 This repository includes a `skills/` folder with guidance for AI coding agents (like Claude Code, Codex, Junie, etc.) when working with GC2 BaaS.
 
