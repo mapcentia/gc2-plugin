@@ -1,0 +1,28 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "gc2",
+  "version": "1.2.2",
+  "description": "GC2 (Geo Compute Cloud): the GC2 MCP server (tools generated from the GC2 OpenAPI spec) plus skills covering runtime SDK usage, provisioning, JSON-RPC, auth, OGC/OWS services, snapshots, scheduler, realtime and delivery rules.",
+  "author": {
+    "name": "MapCentia",
+    "url": "https://gc2.io"
+  },
+  "homepage": "https://github.com/mapcentia/gc2-plugin",
+  "repository": "https://github.com/mapcentia/gc2-plugin",
+  "license": "ISC",
+  "keywords": [
+    "gc2",
+    "geo compute cloud",
+    "baas",
+    "postgis",
+    "geospatial",
+    "mcp"
+  ],
+  "extensions": {
+    "ai.mistral.vibe": {
+      "schemaVersion": 1,
+      "displayName": "GC2 (Geo Compute Cloud)",
+      "toolNamespace": "gc2"
+    }
+  }
+}
