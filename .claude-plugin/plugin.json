@@ -1,7 +1,7 @@
 {
   "name": "gc2",
   "displayName": "GC2 (Geo Compute Cloud)",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "GC2 (Geo Compute Cloud) for Claude Code: the GC2 MCP server (tools generated from the GC2 OpenAPI spec) plus skills covering runtime SDK usage, provisioning, JSON-RPC, auth, OGC/OWS services, snapshots, scheduler, realtime and delivery rules.",
   "author": {
     "name": "MapCentia",
