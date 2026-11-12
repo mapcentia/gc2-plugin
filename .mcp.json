@@ -2,7 +2,7 @@
   "mcpServers": {
     "gc2": {
       "command": "npx",
-      "args": ["-y", "@mapcentia/gc2-mcp-server"]
+      "args": ["-y", "@mapcentia/gc2-mcp-server@1.2.2"]
     }
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "gc2",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "GC2 (Geo Compute Cloud) for Codex: the GC2 MCP server plus skills for runtime SDK usage, provisioning, JSON-RPC, auth, OGC/OWS services, snapshots, scheduler, realtime and delivery rules.",
   "author": {
     "name": "MapCentia",

@@ -84,7 +84,7 @@ Add the server to your Claude Desktop MCP config (e.g., `claude_desktop_config.j
   "mcpServers": {
     "gc2": {
       "command": "npx",
-      "args": ["-y", "@mapcentia/gc2-mcp-server"]
+      "args": ["-y", "@mapcentia/gc2-mcp-server@1.2.2"]
     }
   }
 }
@@ -157,7 +157,7 @@ Check installation with:
 codex plugin list --marketplace mapcentia
 ```
 
-For MCP tools alone, without the bundled skills, use `codex mcp add gc2 -- npx -y @mapcentia/gc2-mcp-server` instead of installing the plugin.
+For MCP tools alone, without the bundled skills, use `codex mcp add gc2 -- npx -y @mapcentia/gc2-mcp-server@1.2.2` instead of installing the plugin.
 
 ## Using Skills with AI Coding Agents
 This repository includes a `skills/` folder with guidance for AI coding agents (like Claude Code, Codex, Junie, etc.) when working with GC2 BaaS.
