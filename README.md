@@ -84,7 +84,7 @@ Add the server to your Claude Desktop MCP config (e.g., `claude_desktop_config.j
   "mcpServers": {
     "gc2": {
       "command": "npx",
-      "args": ["-y", "@mapcentia/gc2-mcp-server@1.2.2"]
+      "args": ["-y", "@mapcentia/gc2-mcp-server@1.2.3"]
     }
   }
 }
@@ -157,7 +157,7 @@ Check installation with:
 codex plugin list --marketplace mapcentia
 ```
 
-For MCP tools alone, without the bundled skills, use `codex mcp add gc2 -- npx -y @mapcentia/gc2-mcp-server@1.2.2` instead of installing the plugin.
+For MCP tools alone, without the bundled skills, use `codex mcp add gc2 -- npx -y @mapcentia/gc2-mcp-server@1.2.3` instead of installing the plugin.
 
 ## Using as a Mistral Vibe plugin
 

@@ -4,7 +4,7 @@
     "gc2": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "@mapcentia/gc2-mcp-server@1.2.2"]
+      "args": ["-y", "@mapcentia/gc2-mcp-server@1.2.3"]
     }
   }
 }

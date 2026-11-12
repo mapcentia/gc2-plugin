@@ -1,13 +1,13 @@
 {
   "name": "@mapcentia/gc2-mcp-server",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "publishConfig": {
     "access": "public"
   },
   "description": "GC2 (Geo Compute Cloud) MCP Server",
   "type": "module",
   "bin": {
-    "mcp-server": "dist/index.js"
+    "gc2-mcp-server": "dist/index.js"
   },
   "files": [
     "dist",
@@ -17,6 +17,7 @@
   ],
   "scripts": {
     "build": "tsc",
+    "prepublishOnly": "npm run build",
     "start": "node dist/index.js",
     "dev": "tsx src/index.ts"
   },
