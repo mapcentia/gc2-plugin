@@ -5375,6 +5375,112 @@
                 }
             }
         },
+        "/api/v4/snapshots/catalog/rebuilds/{id}": {
+            "get": {
+                "tags": [
+                    "Snapshots"
+                ],
+                "description": "Get one catalog rebuild (object), or several by comma separated ids (array).",
+                "operationId": "getSnapshotCatalogRebuild",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Rebuild id, or comma separated ids",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ok",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        {
+                                            "$ref": "#/components/schemas/SnapshotCatalogRebuild"
+                                        },
+                                        {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/SnapshotCatalogRebuild"
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Super-user only"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            }
+        },
+        "/api/v4/snapshots/catalog/rebuilds": {
+            "get": {
+                "tags": [
+                    "Snapshots"
+                ],
+                "description": "List the newest catalog rebuilds.",
+                "operationId": "getSnapshotCatalogRebuilds",
+                "responses": {
+                    "200": {
+                        "description": "Ok",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/SnapshotCatalogRebuild"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Super-user only"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Snapshots"
+                ],
+                "description": "Queue a rewrite of the database's whole STAC catalog of snapshots (catalog.json, and every collection.json, latest.json and item.json). Publishing a snapshot only updates the documents of its own relation, so this is the way to repair a catalog that has drifted or to bring it up to a newer document layout. Takes no request body. Returns 202; poll the returned link for status. The duration grows with the number of published snapshots.",
+                "operationId": "postSnapshotCatalogRebuild",
+                "responses": {
+                    "202": {
+                        "description": "Accepted; poll _links.self for status.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SnapshotCatalogRebuildAccepted"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Super-user only"
+                    },
+                    "406": {
+                        "description": "POST with a resource id is not allowed"
+                    },
+                    "409": {
+                        "description": "A catalog rebuild is already pending or running"
+                    },
+                    "501": {
+                        "description": "Snapshot storage is not configured"
+                    }
+                }
+            }
+        },
         "/api/v4/sql": {
             "post": {
                 "tags": [
@@ -9212,6 +9318,92 @@
                                 "data_type": "geometry(Point,25832)"
                             }
                         ]
+                    },
+                    "error": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "username": {
+                        "type": "string"
+                    },
+                    "created": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "started": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "finished": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "SnapshotCatalogRebuildAccepted": {
+                "description": "A queued rewrite of the snapshot catalog.",
+                "properties": {
+                    "id": {
+                        "description": "Full rewrites of the database's static STAC catalog of snapshots.\n\nPublishing a snapshot only writes the catalog documents of the relation it\ntouched. POST here queues a rewrite of every document (202); the cron worker\n(app/scripts/snapshot_worker.php) runs it, and GET returns its status.\nSuper-user only.",
+                        "type": "string",
+                        "example": "0b8c2f2e-2f5a-4d9c-9d3a-1b2c3d4e5f60"
+                    },
+                    "status": {
+                        "type": "string",
+                        "example": "pending"
+                    },
+                    "_links": {
+                        "properties": {
+                            "self": {
+                                "type": "string",
+                                "example": "/api/v4/snapshots/catalog/rebuilds/0b8c2f2e-2f5a-4d9c-9d3a-1b2c3d4e5f60"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "SnapshotCatalogRebuild": {
+                "description": "Status of a rewrite of the snapshot catalog.",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "example": "0b8c2f2e-2f5a-4d9c-9d3a-1b2c3d4e5f60"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "pending",
+                            "running",
+                            "succeeded",
+                            "failed"
+                        ]
+                    },
+                    "documents": {
+                        "description": "Number of catalog documents the rewrite covered.",
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "example": 4321
+                    },
+                    "failed_documents": {
+                        "description": "Number of those that could not be written.",
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "example": 0
                     },
                     "error": {
                         "type": [

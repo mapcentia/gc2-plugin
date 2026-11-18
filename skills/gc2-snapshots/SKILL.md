@@ -1,6 +1,6 @@
 ---
 name: gc2-snapshots
-description: Use when exporting GC2 BaaS tables/views as Parquet or FlatGeobuf snapshots, or reading published snapshots for analytics — /api/v4/snapshots job endpoints, /api/v4/schemas/{schema}/relations/{relation}/snapshots read endpoints, the Snapshot tools, DuckDB/read_parquet over HTTP Range, presigned URLs, snapshot formats, or snapshot_date-based downloads.
+description: Use when exporting GC2 BaaS tables/views as Parquet or FlatGeobuf snapshots, or reading published snapshots for analytics — /api/v4/snapshots job endpoints, /api/v4/schemas/{schema}/relations/{relation}/snapshots read endpoints, /api/v4/snapshots/catalog/rebuilds (rewriting the STAC catalog), the Snapshot tools, DuckDB/read_parquet over HTTP Range, presigned URLs, snapshot formats, or snapshot_date-based downloads.
 ---
 
 # Snapshots (Parquet/FlatGeobuf exports)
@@ -20,6 +20,18 @@ On GC2 local master as of 2026-09 — **not** on production `api.gc2.io`. MCP to
 | List jobs | `GET .../snapshots?schema=&relation=` / `getSnapshots` | `200`, the 50 newest job rows (bare array) |
 
 A cron worker (`snapshot_worker.php`) runs the export with ogr2ogr — **poll until `status` is `succeeded` or `failed`** (`pending`/`running` in between; `superseded` = a later job re-exported the same relation+date and replaced this one's publication). `formats` (ordered, non-empty, no duplicates; enum `parquet`/`flatgeobuf`; omitted = server default): a geometry-needing format on a geometry-less relation is **skipped with a reason** — unless *every* requested format needs geometry, which is refused up front (400). Per-format outcomes land in `formats[]` (`SnapshotFormatResult`: `format`, `status` requested/produced/skipped, `file`, `size_bytes`, `media_type`, `reason`, `href`).
+
+## STAC catalog rebuild (repair only)
+
+Each database's snapshots are described by a static STAC catalog in the snapshot storage (`catalog.json`, per relation `collection.json` + `latest.json`, per snapshot `item.json`). **A publish updates only its own relation's documents plus `catalog.json`** — so there is normally nothing to do. Queue a full rewrite only to repair a catalog that has drifted (missing/stale documents of other relations) or after a server upgrade that changes the document layout.
+
+| Operation | Route / MCP tool | Result |
+|---|---|---|
+| Queue | `POST /api/v4/snapshots/catalog/rebuilds`, **no body** / `postSnapshotCatalogRebuild` | `202` `{id, status: "pending", _links.self}`; `409` `CATALOG_REBUILD_IN_PROGRESS` while one is pending or running; `501` `SNAPSHOT_NOT_CONFIGURED` |
+| Poll | `GET .../catalog/rebuilds/{id}` / `getSnapshotCatalogRebuild` — one id or a comma list | `200` `{id, status, documents, failed_documents, error, username, created, started, finished}`; `404` `CATALOG_REBUILD_NOT_FOUND` |
+| List | `GET .../catalog/rebuilds` / `getSnapshotCatalogRebuilds` | `200`, the 50 newest (bare array) |
+
+Super-user only. MCP tools ship with `@mapcentia/gc2-mcp-server` 1.2.6+, SDK methods (`Snapshots.postSnapshotCatalogRebuild()` etc.) with `@mapcentia/gc2-sdk` 0.3.4+. `status` is `pending`/`running`/`succeeded`/`failed`; `failed` with `failed_documents > 0` means the rest were written. **It is slow on a large catalog** (one storage write per document — minutes for thousands of snapshots) and the same worker runs snapshots, so queued snapshots on that server wait while it runs. On a server that predates the endpoint the route does not exist; there every publish still rewrites the whole catalog.
 
 ## Read API (published snapshots)
 
@@ -52,4 +64,5 @@ Scheduler jobs can queue snapshots automatically after each successful import (`
 | Sending auth headers to a `presigned_url` | It is presigned — fetch it bare, and never cache it |
 | `/data/{format}` for a skipped format | `404` — check the snapshot's `formats[]` for `status: "produced"` first |
 | Geofenced sub-user reading snapshots | Deny/limit rules → `403` `GEOFENCE_RULES_APPLY` regardless of read privilege |
+| Queueing a catalog rebuild after every snapshot | Not needed — a publish already updates its own documents; a rebuild is a slow repair job that holds up queued snapshots |
 | Partial batch queueing | Arrays are all-or-nothing — one bad relation fails the whole POST |
