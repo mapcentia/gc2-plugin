@@ -5,7 +5,7 @@ description: Global hard rules for any work involving GC2 (Geo Compute Cloud) Ba
 
 # GC2 BaaS Core Rules
 
-> Last updated: 2026-11-11
+> Last updated: 2026-11-18
 
 This skill only contains global hard rules. Task-specific guidance lives in the other `gc2-*` skills (see section 6).
 
@@ -58,6 +58,7 @@ Use the minimal matching skill(s) below for each task:
 - Provisioning and migrations: `gc2-provisioning`
 - JSON-RPC lifecycle and typed API: `gc2-json-rpc`
 - Auth model by runtime context: `gc2-auth-model`
+- MCP/CLI session: not logged in, login flow, active connection (`gc2 whoami`): `gc2-login`
 - PostgreSQL types and output formats: `gc2-types-formats`
 - Map view config and layer styling (classes/styles/labels): `gc2-map-styling`
 - Sub-user privileges and rights inheritance: `gc2-privileges`

@@ -13,6 +13,7 @@ Use the smallest matching skill set for the task.
 | `gc2-provisioning` | Changing schema, tables, columns, constraints, indexes, policies, migrations |
 | `gc2-json-rpc` | Creating/updating/calling JSON-RPC methods and generating TypeScript interfaces |
 | `gc2-auth-model` | Implementing or reviewing auth across browser, backend, CLI, and provisioning |
+| `gc2-login` | A tool says "Not logged in"/"session expired", or checking/changing the active connection: `gc2 whoami`, `connect`, `login --flow device` |
 | `gc2-types-formats` | Choosing PostgreSQL types, casts, `type_hints`, `type_formats`, output formats |
 | `gc2-file-import` | Importing files with `postFileUpload` and `postFileProcess` |
 | `gc2-openapi-docs` | Using OpenAPI/docs as fallback when MCP/SDK are insufficient |
