@@ -19,7 +19,7 @@ The MCP server uses the same login as the [`gc2-cli`](https://www.npmjs.com/pack
 ```bash
 npm i -g @mapcentia/gc2-cli
 gc2 connect https://api.gc2.io   # only if not the default
-gc2 login                            # browser, device, or password
+gc2 login                            # browser or device
 ```
 
 The MCP server reads `~/.config/configstore/gc2-env.json` (managed by `gc2-cli`) and refreshes the access token automatically when it expires.
