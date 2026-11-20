@@ -24,6 +24,7 @@ Use the smallest matching skill set for the task.
 | `gc2-feature` | Reading/creating/updating/deleting single features as GeoJSON by primary key |
 | `gc2-scheduler` | Automated/cron data imports: scheduler jobs and runs, manual start/stop, monitoring |
 | `gc2-snapshots` | Parquet/FlatGeobuf exports of relations and reading published snapshots (DuckDB) |
+| `gc2-search` | Full-text search over a table/view: OpenSearch index build, query string/DSL search, per-column mapping, analysis settings |
 | `gc2-realtime` | Realtime WebSocket events, subscriptions with shapes, enabling table change events |
 | `gc2-ows` | Serving/querying layers via WMS, WFS, WFS-T and the MapCache (WMTS/TMS/XYZ) proxy; Basic/Bearer/anonymous access, FILTERS, srs/time-slice |
 | `gc2-tile-seeding` | Seeding/prerendering MapCache tile caches via the tileseeder job queue |

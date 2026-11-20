@@ -4944,11 +4944,126 @@
                 "tags": [
                     "Search"
                 ],
-                "description": "Search the table's OpenSearch index. Query string or body is passed to OpenSearch _search unaltered.",
+                "description": "Search the relation's OpenSearch index. The query string is passed to OpenSearch _search (URI search) unaltered, so any _search URI parameter works; the common ones are listed. A JSON body, if sent, takes precedence over the query string. Sub users need read access to the relation.",
                 "operationId": "search",
+                "parameters": [
+                    {
+                        "name": "schema",
+                        "in": "path",
+                        "description": "Schema name",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "my_schema"
+                    },
+                    {
+                        "name": "table",
+                        "in": "path",
+                        "description": "Table or view name",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "my_table"
+                    },
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "description": "Lucene query string. Attribute fields are addressed as 'properties.<column>'.",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "properties.name:Findme"
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "Max number of hits to return.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10
+                        },
+                        "example": 20
+                    },
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "description": "Offset of the first hit (paging).",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        },
+                        "example": 0
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Comma-separated '<field>:<asc|desc>' pairs.",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "properties.name.keyword:asc"
+                    },
+                    {
+                        "name": "_source",
+                        "in": "query",
+                        "description": "Comma-separated list of _source fields to return, or false to omit _source.",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "properties.name"
+                    },
+                    {
+                        "name": "default_operator",
+                        "in": "query",
+                        "description": "Default operator for 'q'.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "OR",
+                            "enum": [
+                                "AND",
+                                "OR"
+                            ]
+                        },
+                        "example": "AND"
+                    },
+                    {
+                        "name": "df",
+                        "in": "query",
+                        "description": "Default field for 'q' when no field prefix is given.",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "properties.name"
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "OpenSearch response"
+                        "description": "OpenSearch response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SearchResult"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid query (SEARCH_ERROR)"
+                    },
+                    "403": {
+                        "description": "No read access to the relation"
+                    },
+                    "404": {
+                        "description": "Relation not found, or no search index has been built for it (INDEX_NOT_FOUND)"
                     }
                 }
             },
@@ -4956,11 +5071,49 @@
                 "tags": [
                     "Search"
                 ],
-                "description": "(Re)build the OpenSearch index from the table/view. Owner/superuser only.",
+                "description": "(Re)build the OpenSearch index from the table/view: drops any existing index, creates it with the database's analysis settings (see /api/v4/search/settings) and a mapping derived from the columns, bulk indexes all rows and refreshes the index so it is searchable immediately. The relation must have a primary key. No request body. Database owner only.",
                 "operationId": "buildSearchIndex",
+                "parameters": [
+                    {
+                        "name": "schema",
+                        "in": "path",
+                        "description": "Schema name",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "my_schema"
+                    },
+                    {
+                        "name": "table",
+                        "in": "path",
+                        "description": "Table or view name",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "my_table"
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "Index built"
+                        "description": "Index built",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SearchIndexBuildResult"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "The relation has no primary key, or OpenSearch rejected the index (INDEX_BUILD_ERROR)"
+                    },
+                    "403": {
+                        "description": "Caller is not the database owner (NOT_OWNER)"
+                    },
+                    "404": {
+                        "description": "Relation not found"
                     }
                 }
             },
@@ -4968,11 +5121,60 @@
                 "tags": [
                     "Search"
                 ],
-                "description": "Search with an OpenSearch query DSL body.",
+                "description": "Search the relation's OpenSearch index with a query DSL body. The body is passed to OpenSearch _search unaltered. Sub users need read access to the relation.",
                 "operationId": "searchPost",
+                "parameters": [
+                    {
+                        "name": "schema",
+                        "in": "path",
+                        "description": "Schema name",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "my_schema"
+                    },
+                    {
+                        "name": "table",
+                        "in": "path",
+                        "description": "Table or view name",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "my_table"
+                    }
+                ],
+                "requestBody": {
+                    "description": "OpenSearch query DSL.",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SearchQuery"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
-                        "description": "OpenSearch response"
+                        "description": "OpenSearch response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SearchResult"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid query (SEARCH_ERROR)"
+                    },
+                    "403": {
+                        "description": "No read access to the relation"
+                    },
+                    "404": {
+                        "description": "Relation not found, or no search index has been built for it (INDEX_NOT_FOUND)"
                     }
                 }
             },
@@ -4980,11 +5182,46 @@
                 "tags": [
                     "Search"
                 ],
-                "description": "Drop the OpenSearch index. Owner/superuser only.",
+                "description": "Drop the relation's OpenSearch index. The table itself is not touched. Database owner only.",
                 "operationId": "dropSearchIndex",
+                "parameters": [
+                    {
+                        "name": "schema",
+                        "in": "path",
+                        "description": "Schema name",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "my_schema"
+                    },
+                    {
+                        "name": "table",
+                        "in": "path",
+                        "description": "Table or view name",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "my_table"
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "Index dropped"
+                        "description": "Index dropped",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SearchIndexDropResult"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Caller is not the database owner (NOT_OWNER)"
+                    },
+                    "404": {
+                        "description": "Relation or index not found (INDEX_DROP_ERROR)"
                     }
                 }
             }
@@ -4998,7 +5235,17 @@
                 "operationId": "getSearchSettings",
                 "responses": {
                     "200": {
-                        "description": "The analysis block"
+                        "description": "The analysis block",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SearchSettings"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Caller is not the database owner (NOT_OWNER)"
                     }
                 }
             },
@@ -5008,9 +5255,33 @@
                 ],
                 "description": "Set the per-database OpenSearch analysis block. Applies to indexes built after this call.",
                 "operationId": "putSearchSettings",
+                "requestBody": {
+                    "description": "The analysis block to store.",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SearchSettings"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
-                        "description": "Saved"
+                        "description": "Saved. Echoes the stored analysis block.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SearchSettings"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Body is not an object with an 'analysis' object (INVALID_DATA)"
+                    },
+                    "403": {
+                        "description": "Caller is not the database owner (NOT_OWNER)"
                     }
                 }
             }
@@ -9044,6 +9315,241 @@
                         "description": "What each setting would be if it were not stored — the patchable keys only. Reported even for a field that IS stored, which is when a form needs it: to show the default beside the value the user is about to clear.",
                         "type": "object",
                         "readOnly": true
+                    }
+                },
+                "type": "object"
+            },
+            "SearchQuery": {
+                "description": "An OpenSearch query DSL body. Passed to OpenSearch _search unaltered, so any _search body is accepted; the common members are listed here.",
+                "properties": {
+                    "query": {
+                        "title": "Query",
+                        "description": "OpenSearch query DSL. Attribute fields are addressed as 'properties.<column>'.",
+                        "type": "object",
+                        "example": {
+                            "match": {
+                                "properties.name": "Findme"
+                            }
+                        }
+                    },
+                    "size": {
+                        "title": "Size",
+                        "description": "Max number of hits to return.",
+                        "type": "integer",
+                        "default": 10,
+                        "example": 20
+                    },
+                    "from": {
+                        "title": "From",
+                        "description": "Offset of the first hit (paging).",
+                        "type": "integer",
+                        "default": 0,
+                        "example": 0
+                    },
+                    "sort": {
+                        "title": "Sort",
+                        "description": "Sort clauses.",
+                        "type": "array",
+                        "items": {},
+                        "example": [
+                            {
+                                "properties.name.keyword": "asc"
+                            }
+                        ]
+                    },
+                    "_source": {
+                        "title": "Source filter",
+                        "description": "Restrict the returned _source fields, or false to omit _source.",
+                        "example": [
+                            "properties.name"
+                        ],
+                        "oneOf": [
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            }
+                        ]
+                    },
+                    "aggs": {
+                        "title": "Aggregations",
+                        "description": "OpenSearch aggregations.",
+                        "type": "object"
+                    },
+                    "highlight": {
+                        "title": "Highlight",
+                        "description": "OpenSearch highlighting.",
+                        "type": "object"
+                    }
+                },
+                "type": "object",
+                "additionalProperties": true
+            },
+            "SearchResult": {
+                "description": "The OpenSearch _search response, returned unaltered.",
+                "properties": {
+                    "took": {
+                        "title": "Took",
+                        "description": "Search time in milliseconds.",
+                        "type": "integer",
+                        "example": 3
+                    },
+                    "timed_out": {
+                        "title": "Timed out",
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "_shards": {
+                        "title": "Shards",
+                        "type": "object"
+                    },
+                    "hits": {
+                        "title": "Hits",
+                        "properties": {
+                            "total": {
+                                "properties": {
+                                    "value": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "relation": {
+                                        "type": "string",
+                                        "example": "eq"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "max_score": {
+                                "type": [
+                                    "number",
+                                    "null"
+                                ],
+                                "example": 0.2876821
+                            },
+                            "hits": {
+                                "description": "The matching documents. _source holds the GeoJSON-like document with 'properties' and 'geometry'.",
+                                "type": "array",
+                                "items": {
+                                    "properties": {
+                                        "_index": {
+                                            "type": "string",
+                                            "example": "mydb_my_schema_my_table"
+                                        },
+                                        "_id": {
+                                            "type": "string",
+                                            "example": "1"
+                                        },
+                                        "_score": {
+                                            "type": [
+                                                "number",
+                                                "null"
+                                            ],
+                                            "example": 0.2876821
+                                        },
+                                        "_source": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "aggregations": {
+                        "title": "Aggregations",
+                        "description": "Present when the query has aggs.",
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "SearchIndexBuildResult": {
+                "description": "Result of (re)building a search index.",
+                "properties": {
+                    "index": {
+                        "title": "Index",
+                        "description": "OpenSearch index name: <database>_<schema>_<table>.",
+                        "type": "string",
+                        "example": "mydb_my_schema_my_table"
+                    },
+                    "message": {
+                        "title": "Message",
+                        "description": "Indexing summary.",
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "example": "Indexed 42 documents"
+                    },
+                    "errors": {
+                        "title": "Errors",
+                        "description": "True if OpenSearch reported errors for some documents.",
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "errors_in": {
+                        "title": "Errors in",
+                        "description": "Per-document bulk indexing errors.",
+                        "type": "array",
+                        "items": {
+                            "type": "object"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "SearchIndexDropResult": {
+                "description": "Result of dropping a search index.",
+                "properties": {
+                    "index": {
+                        "title": "Index",
+                        "description": "OpenSearch index name.",
+                        "type": "string",
+                        "example": "mydb_my_schema_my_table"
+                    },
+                    "dropped": {
+                        "title": "Dropped",
+                        "type": "boolean",
+                        "example": true
+                    }
+                },
+                "type": "object"
+            },
+            "SearchSettings": {
+                "description": "Per-database OpenSearch analysis settings, used as settings.analysis when a search index is built.",
+                "required": [
+                    "analysis"
+                ],
+                "properties": {
+                    "analysis": {
+                        "title": "Analysis",
+                        "description": "An OpenSearch index settings.analysis block (analyzer, tokenizer, filter, char_filter, normalizer). Replaces the default block wholesale.",
+                        "type": "object",
+                        "example": {
+                            "analyzer": {
+                                "my_analyzer": {
+                                    "type": "custom",
+                                    "tokenizer": "standard",
+                                    "filter": [
+                                        "lowercase",
+                                        "my_syn"
+                                    ]
+                                }
+                            },
+                            "filter": {
+                                "my_syn": {
+                                    "type": "synonym",
+                                    "synonyms": [
+                                        "vej, road"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 },
                 "type": "object"

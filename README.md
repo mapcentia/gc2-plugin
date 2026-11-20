@@ -200,6 +200,7 @@ To ensure your AI agent follows these rules while developing your application:
 - `gc2-file-import` — File import workflow
 - `gc2-ows` — WMS/WFS/WFS-T and MapCache proxy endpoints and their access model
 - `gc2-ogc` — OGC API Features and Maps (GeoJSON items, map images)
+- `gc2-search` — Full-text search: OpenSearch index per table/view, mapping and analyzers
 - `gc2-openapi-docs` — OpenAPI and docs fallback policy
 - `gc2-delivery` — Delivery checklist and quality gate
 

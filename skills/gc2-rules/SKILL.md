@@ -67,6 +67,7 @@ Use the minimal matching skill(s) below for each task:
 - Feature CRUD as GeoJSON by primary key: `gc2-feature`
 - Scheduled/automated data imports (cron jobs, runs): `gc2-scheduler`
 - Parquet/FlatGeobuf snapshot exports and analytics reads: `gc2-snapshots`
+- Full-text search over a table/view (OpenSearch index, mapping, analyzers): `gc2-search`
 - Realtime WebSocket events: `gc2-realtime`
 - File import workflow: `gc2-file-import`
 - OGC web services (WMS/WFS/WFS-T/MapCache): `gc2-ows`
