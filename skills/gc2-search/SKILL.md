@@ -9,7 +9,7 @@ Use this skill for the v4 Search API: each table or view can have an OpenSearch 
 
 ## Availability
 
-MCP tools are generated from `centia-api.json`; SDK support is `@mapcentia/gc2-sdk` **0.3.5+** (`Search` class). Whether the API is deployed on a given server — including production `api.gc2.io` — is not confirmed here: a `404` on `/api/v4/search/settings` means the server does not have it.
+Typed MCP tools ship in `@mapcentia/gc2-mcp-server` **1.2.7+** (generated from `centia-api.json`); SDK support is `@mapcentia/gc2-sdk` **0.3.5+** (`Search` class). Whether the API is deployed on a given server — including production `api.gc2.io` — is not confirmed here: a `404` on `/api/v4/search/settings` means the server does not have it.
 
 ## Endpoints
 
