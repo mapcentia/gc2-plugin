@@ -31,7 +31,7 @@ Layers draw **by `sort_id`, lowest at the bottom**. Before 2026.10.0 the order w
 
 ## Per-schema settings
 
-`/api/v4/schemas/{schema}/tile` (super-user only): `cache` (`sqlite`/`disk`/`mbtiles`/`memcache`/`s3`; `mbtiles` needs a GC2 with that backend, else 400), `format`, `ttl`, `auto_expire`, `meta_size`, `meta_buffer`, `s3_tile_set`, `title`, `abstract`.
+`/api/v4/schemas/{schema}/tile` (super-user only): `cache` (`sqlite`/`disk`/`mbtiles`/`memcache`/`s3`; `mbtiles` needs a GC2 with that backend, else 400, and only holds the image tileset — `<schema>.mvt` stays in `sqlite`), `format`, `ttl`, `auto_expire`, `meta_size`, `meta_buffer`, `s3_tile_set`, `title`, `abstract`.
 
 - `getSchemaTileSettings` → the **effective** values plus `_stored` (only what is saved), `_defaults` (each key's default — visible even when the key is stored) and `schema_exists`; `vector_format` is read-only.
 - `patchSchemaTileSettings` merges; an explicit `null` removes a key; → `303`. Requires the schema to exist (`404` `SCHEMA_NOT_FOUND`) so a typo cannot leave a row that takes effect later.

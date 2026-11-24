@@ -74,7 +74,7 @@ Classes, styles, and labels are converted server-side into a MapServer mapfile; 
 | label `fontweight` | `normal` `bold` `italic` `bolditalic` |
 | layer `geotype` | `Default` `POINT` `LINE` `POLYGON` |
 | layer `format` | `PNG` `jpeg_low` `jpeg_medium` `jpeg_high` |
-| layer `cache` | `disk` `sqlite` `mbtiles` `s3` `memcache` |
+| layer `cache` | `disk` `sqlite` `mbtiles` `s3` `memcache` (`mbtiles` holds the image tileset only; `.mvt`/`.json` stay in `sqlite`) |
 
 ## Scale gates (all "Numeric value stored as a string")
 

@@ -9140,7 +9140,7 @@
                 "description": "The PATCH body. Every field is optional; an explicit null removes that setting and returns it to its fallback. Unknown fields are rejected.",
                 "properties": {
                     "cache": {
-                        "description": "Cache backend. \"mbtiles\" stores one MBTiles file per grid.",
+                        "description": "Cache backend. \"mbtiles\" stores the image tileset as one MBTiles file per grid; the .mvt tileset then stays in sqlite, because an MBTiles cache only holds images.",
                         "type": [
                             "string",
                             "null"
