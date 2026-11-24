@@ -2842,7 +2842,7 @@
                 "tags": [
                     "Mapcache"
                 ],
-                "description": "Delete a MapCache tileset's cached tiles — a layer's tileset, or the merged per-schema one (a bare schema name). A FULL delete (no bbox/zoom) wipes the backend store directly — synchronous for sqlite/bdb (200), background for disk (202); s3/memcache are not supported for a full delete (400 — use a scoped delete or TTL/lifecycle). A SCOPED delete (bbox and/or zoom) runs mapcache_seed -m delete as a background job (202). Requires write/owner authorization.",
+                "description": "Delete a MapCache tileset's cached tiles — a layer's tileset, or the merged per-schema one (a bare schema name). A FULL delete (no bbox/zoom) wipes the backend store directly — synchronous for sqlite/mbtiles/bdb (200), background for disk (202); s3/memcache are not supported for a full delete (400 — use a scoped delete or TTL/lifecycle). A SCOPED delete (bbox and/or zoom) runs mapcache_seed -m delete as a background job (202). Requires write/owner authorization.",
                 "operationId": "deleteMapcacheTileset",
                 "parameters": [
                     {
@@ -8205,6 +8205,7 @@
                                 "enum": [
                                     "disk",
                                     "sqlite",
+                                    "mbtiles",
                                     "s3",
                                     "memcache"
                                 ],
@@ -9139,7 +9140,7 @@
                 "description": "The PATCH body. Every field is optional; an explicit null removes that setting and returns it to its fallback. Unknown fields are rejected.",
                 "properties": {
                     "cache": {
-                        "description": "Cache backend.",
+                        "description": "Cache backend. \"mbtiles\" stores one MBTiles file per grid.",
                         "type": [
                             "string",
                             "null"
@@ -9147,6 +9148,7 @@
                         "enum": [
                             "sqlite",
                             "disk",
+                            "mbtiles",
                             "memcache",
                             "s3"
                         ]
