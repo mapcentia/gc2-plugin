@@ -57,4 +57,5 @@ Versioned layers (`gc2_version_*` columns): WFS/WMS show the current version by 
 | Paging WFS with `STARTINDEX` | unsupported; use OGC API `/items?limit&offset` |
 | Fetching images through MCP tools or `Ows.getOws` | tools and wrappers return text; images/tiles must be fetched over HTTP (`Mapcache.mapcacheUrl()` for tile templates) |
 | Expecting HTTP 4xx from a WMS/WFS error mid-stream | OGC `ServiceException`/`ExceptionReport` XML with HTTP 200 once headers are sent |
+| A layer renders empty with no error | A table without a primary key and without a `gid` column is drawn empty by MapServer — add a primary key |
 | Expecting 404 from `/ows` or `/wfs` for an unknown `{database}` | Still an XML exception report with HTTP 200; the text is "Database not found" (older servers: the database driver's message). Legends and the OGC API answer 404 `DATABASE_NOT_FOUND` instead |

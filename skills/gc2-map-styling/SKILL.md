@@ -1,6 +1,6 @@
 ---
 name: gc2-map-styling
-description: Map view configuration and layer cartography for GC2 BaaS, including per-schema map center/zoom/extent, layers, classes, styles, and labels, MapServer-backed rendering, id round-trip rules, and payload value conventions. Also the built-in symbols a style can name (getSymbol, /api/v4/symbols) and layer legends with class icons (getLegend, /api/v4/legends).
+description: Map view configuration and layer cartography for GC2 BaaS, including per-schema map center/zoom/extent, layers, classes, styles, and labels, MapServer-backed rendering, id round-trip rules, and payload value conventions. Also a layer's QGIS style (qml / use_qml on getLayer/patchLayer: QGIS Server drawing instead of classes, and why class edits then have no effect), the built-in symbols a style can name (getSymbol, /api/v4/symbols) and layer legends with class icons (getLegend, /api/v4/legends).
 ---
 
 # Map, Layers, Classes, Styles, and Labels
@@ -35,12 +35,29 @@ Classes, styles, and labels are converted server-side into a MapServer mapfile; 
 | Model | Route / MCP tool | Semantics |
 |---|---|---|
 | Atomic configure | `POST /api/v4/layers` / `postLayer` | Sets `properties` and **replaces the entire `classes` array** |
-| Layer properties | `PATCH /api/v4/layers/{layer}` / `patchLayer` | Key-merge on the def JSON only (no classes) |
+| Layer properties | `PATCH /api/v4/layers/{layer}` / `patchLayer` | Key-merge on the def JSON only (no classes); also takes top-level `qml` / `use_qml` (see "QGIS style (QML) or classes") |
 | Granular create | `POST .../classes`, `.../styles`, `.../labels` / `postLayerClass`, `postStyle`, `postLabel` | Additive; body is one object or an array |
 | Granular update | `PATCH .../classes/{id}`, etc. / `patchLayerClass`, `patchStyle`, `patchLabel` | Key-merge on that entry |
 | Granular delete | `DELETE .../{id}` / `deleteLayerClass`, `deleteStyle`, `deleteLabel` | `{id}` accepts comma-separated ids |
 
 `POST /api/v4/layers` configures **existing** layers (relations already registered); it does not create tables. Preferred bulk workflow: `getLayer` → edit the document locally → one atomic `postLayer`.
+
+## QGIS style (QML) or classes
+
+A layer is drawn **either** by MapServer with its classes, styles and labels, **or** by QGIS Server with a QML (the XML text of a QGIS `.qml` style file). Two top-level fields on the layer resource — next to `name`, `properties` and `classes`, *not* inside `properties` — control it. On GeoCloud2 local `master` (commit `dc08dd47`), **not deployed** as of 2026-11; MCP tools know the fields from `@mapcentia/gc2-mcp-server` 1.2.12+.
+
+| Field | Meaning |
+|---|---|
+| `qml` | `string \| null` — the stored QML. Storing one does **not** by itself change the drawing |
+| `use_qml` | `boolean` — the switch: `true` = QGIS Server with the QML, `false` = MapServer with the classes |
+
+- `getLayer` returns both, for sub-users too. Only **`patchLayer`** writes them (alone or together with `properties`), and only for the **database owner** — a sub-user sending either gets `403 SUPER_USER_ONLY`. `postLayer` does not accept them, although the tool lists them (it shares the `Layer` schema): leave them out there.
+- Switching deletes nothing: the QML and the classes both stay stored. `qml: null` or `""` removes the QML and switches `use_qml` off.
+- **While `use_qml` is `true`, classes, styles and labels are kept but have no effect on the map**, and `getLegend` gives one entry with `name: null` and a QGIS picture. "I changed the class colour and nothing happened" is expected on such a layer — check `use_qml` with `getLayer` before editing classes, and ask the user before switching it off.
+- Layers given a QML in the old admin GUI report `use_qml: true`.
+- `patchLayer` errors: `400 INVALID_QML` (not well-formed XML), `400 QML_MISSING` (`use_qml: true` with no QML stored or sent), `400 QML_UNSUPPORTED_GEOMETRY` (not a point, line or polygon layer), `409 EXTERNAL_SOURCE` (the layer is drawn from an external WMS or an uploaded QGIS project).
+- **Older servers answer 400 if either field is sent.** Send them only when `getLayer` returned the `qml` key.
+- The switch does not clear cached tiles (as for other style changes); `/api/v4/ows` shows it at once — wipe the tileset with `deleteMapcacheTileset` (`gc2-ows`) if tiles must follow.
 
 ## Id and round-trip rules
 
@@ -109,6 +126,8 @@ On GeoCloud2 local `master` (commits `fef28f9e`, `21d0c44b`), **not deployed** a
 | Client-generated ids on new entries | Server assigns ids; class creation with an id returns 400 |
 | Numeric values as JSON numbers | Most def/class/style/label numerics are strings; `''` = unset |
 | Adding a class via `PATCH /layers/{layer}` | That route key-merges layer properties only; use `postLayerClass` or atomic `postLayer` |
+| Editing classes/styles/labels on a layer with `use_qml: true` and expecting the map to change | QGIS Server draws it from the QML; the classes are stored but unused until `use_qml` is `false` |
+| Sending `qml`/`use_qml` inside `properties`, or with `postLayer` | Top-level fields, `patchLayer` only, database owner only |
 | Stripping unrecognized keys before writing back | Legacy flat keys must round-trip unchanged |
 | Setting `theme_column`/`label_column` alongside class expressions or label `text` | The two mechanisms must not be combined — leave both properties empty and use expressions/`text` |
 | String expression written `[Status]='Forslag'` | Quote the column reference too for string columns: `'[Status]'='Forslag'`; numeric columns stay unquoted: `[tal]=1` |

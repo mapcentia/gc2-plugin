@@ -2446,7 +2446,7 @@
                 "tags": [
                     "Layer"
                 ],
-                "description": "Update layer properties (key-merge on the def JSON).",
+                "description": "Update layer properties (key-merge on the def JSON), and/or the layer's QML and whether it is used.",
                 "operationId": "patchLayer",
                 "parameters": [
                     {
@@ -8365,6 +8365,21 @@
                         "items": {
                             "$ref": "#/components/schemas/LayerClass"
                         }
+                    },
+                    "qml": {
+                        "title": "QML",
+                        "description": "The layer's QGIS style (the XML text of a .qml file), or null when it has none. Storing a QML does not by itself change how the layer is drawn; `use_qml` does. PATCH only, and only by the database owner. Must be well-formed XML; null removes it (and switches `use_qml` off).",
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "example": "<qgis styleCategories=\"Symbology\"><renderer-v2 type=\"singleSymbol\"/></qgis>"
+                    },
+                    "use_qml": {
+                        "title": "Use QML",
+                        "description": "Whether the layer is drawn by QGIS Server with its QML (true) or by MapServer with its classes (false). Switching does not remove the QML or the classes. true needs a stored `qml` (400 QML_MISSING), a point, line or polygon layer (400 QML_UNSUPPORTED_GEOMETRY), and a layer that is not drawn from an external source (409 EXTERNAL_SOURCE). While true, the layer's classes, styles and labels are not used and its legend is one picture from QGIS. PATCH only, and only by the database owner.",
+                        "type": "boolean",
+                        "example": false
                     }
                 },
                 "type": "object"
