@@ -24,6 +24,8 @@ Lives on the GeoCloud2 branch `dev/multiple_styles` (commits `25900b64`…`844d8
 
 Writes to a layer that is not editable answer `403` `LAYER_NOT_EDITABLE` on POST, PATCH and DELETE (newer backends; older ones skip the write silently and answer e.g. `400` `NOTHING_INSERTED`).
 
+On a versioned table every write keeps the previous state as an ended version; on a workflow table the write also gets a status from the caller's workflow role (author drafted, reviewer reviewed, publisher/owner published), and a sub-user with role `none` cannot edit. Switching these on, roles and approval: `gc2-workflow`.
+
 No PUT/upsert. No collection GET — reading a whole table is a SQL API or WFS job (`GET .../features` without a key → 400 `FEATURE_ID_REQUIRED`). Keys containing `'` are rejected (400 `INVALID_FEATURE_ID`).
 
 ## Body and write rules

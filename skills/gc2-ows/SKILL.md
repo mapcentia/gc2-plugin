@@ -44,7 +44,7 @@ Layer visibility in GetCapabilities follows the same rule (anonymous clients see
 
 ## Versioning and workflow
 
-Versioned layers (`gc2_version_*` columns): WFS/WMS show the current version by default; `/srs/{srs}/ts/{timeSlice}` on WFS returns the version valid at that time. WFS-T updates close the old version and insert a new one. Workflow layers (`gc2_status`/`gc2_workflow`): a sub-user without a role only reads published rows (`gc2_status = 3`) and cannot transact.
+Versioned layers (`gc2_version_*` columns): WFS/WMS show the current version by default; `/srs/{srs}/ts/{timeSlice}` on WFS returns the version valid at that time. WFS-T updates close the old version and insert a new one. Workflow layers (`gc2_status`/`gc2_workflow`): a sub-user without a role only reads published rows (`gc2_status = 3`) and cannot transact. Enabling versioning/workflow on a table, workflow roles, approval and the log are in `gc2-workflow`.
 
 ## Common mistakes
 

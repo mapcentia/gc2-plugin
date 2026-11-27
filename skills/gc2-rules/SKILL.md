@@ -49,6 +49,7 @@ Destructive includes:
 - `DROP`, `TRUNCATE`, destructive `DELETE`
 - schema/table/column/constraint/index deletes
 - policy overwrite operations
+- `patchTable` with `versioning: false` (deletes all ended versions) or `workflow: false` (drops statuses and the workflow log) — see `gc2-workflow`
 
 ## 6) Required Skill Routing
 
@@ -65,6 +66,7 @@ Use the minimal matching skill(s) below for each task:
 - Key/value store (app state, flags, preferences): `gc2-keyvalue`
 - Vidi configurations (manage, publish, anonymous `.json` for Vidi): `gc2-configurations`
 - Feature CRUD as GeoJSON by primary key: `gc2-feature`
+- Table versioning, workflow roles, approval and the workflow log: `gc2-workflow`
 - Scheduled/automated data imports (cron jobs, runs): `gc2-scheduler`
 - Parquet/FlatGeobuf snapshot exports and analytics reads: `gc2-snapshots`
 - Full-text search over a table/view (OpenSearch index, mapping, analyzers): `gc2-search`

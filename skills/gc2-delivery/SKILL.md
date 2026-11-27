@@ -47,7 +47,12 @@ Auth and access:
 
 Metadata:
 
-- `getMetaData`, `patchMetaData`
+- `getMetaData`, `patchMetaData`, `getMetaDataPublic` (no token, anonymous view)
+
+Versioning and workflow:
+
+- `getTable` / `patchTable` (`versioning`, `workflow`)
+- `getWorkflowRoles`, `patchWorkflowRoles`, `getWorkflowItem`, `patchWorkflowItem`, `getWorkflowLog`
 
 OGC services:
 

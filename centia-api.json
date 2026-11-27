@@ -3102,6 +3102,61 @@
                 ]
             }
         },
+        "/api/v4/meta/database/{database}/{query}": {
+            "get": {
+                "tags": [
+                    "Metadata"
+                ],
+                "summary": "Get relation metadata without a token",
+                "operationId": "getMetaDataPublic",
+                "parameters": [
+                    {
+                        "name": "database",
+                        "in": "path",
+                        "description": "Database name to use.",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "mydb"
+                    },
+                    {
+                        "name": "query",
+                        "in": "path",
+                        "description": "Schema-qualified relation name, schema name, or tag (tag:name). Comma-separated values are supported.",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "noRestriction",
+                        "in": "query",
+                        "description": "Leaves out column restrictions on the returned metadata. Restrictions can be quite extensive.",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        },
+                        "example": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ok",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Meta"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "The database does not exist (DATABASE_NOT_FOUND)"
+                    }
+                }
+            }
+        },
         "/api/v4/methods/{method}": {
             "get": {
                 "tags": [
@@ -6411,6 +6466,16 @@
                                                 "type": "string",
                                                 "example": "my_other_schema"
                                             },
+                                            "versioning": {
+                                                "description": "Enable or disable versioning (database owner only). Enabling adds the gc2_version_* columns; from then on edits through WFS-T and the Feature API keep the previous state as an ended version. Disabling deletes all ended versions and removes the columns: the history is lost. Refused with 409 WORKFLOW_ENABLED while the table has workflow, unless workflow is disabled in the same request.",
+                                                "type": "boolean",
+                                                "example": true
+                                            },
+                                            "workflow": {
+                                                "description": "Enable or disable workflow (database owner only). Needs versioning (409 VERSIONING_REQUIRED; both can be enabled in one request). Enabling adds gc2_status and gc2_workflow and marks existing rows as published. Disabling removes them and the table's workflow log; every row is an ordinary row afterwards, whatever status it had.",
+                                                "type": "boolean",
+                                                "example": false
+                                            },
                                             "comment": {
                                                 "title": "Comment",
                                                 "description": "Comment on the table",
@@ -7244,6 +7309,345 @@
                         "description": "Unauthorized — invalid token, or HTTP Basic auth required/failed for a protected layer"
                     }
                 }
+            }
+        },
+        "/api/v4/schemas/{schema}/tables/{table}/workflow-items/{gid}": {
+            "get": {
+                "tags": [
+                    "Workflow"
+                ],
+                "summary": "Get workflow items",
+                "description": "Get the workflow items of a table, newest first. Without `gid` the list holds what the caller can still move forward: for a reviewer the drafted features, for a publisher (and the database owner) the drafted and reviewed ones; `all=true` lists every item. With `gid`, that item whatever its status. Needs a workflow role on the table or the database owner.",
+                "operationId": "getWorkflowItem",
+                "parameters": [
+                    {
+                        "name": "schema",
+                        "in": "path",
+                        "description": "Schema name",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "my_schema"
+                    },
+                    {
+                        "name": "table",
+                        "in": "path",
+                        "description": "Table name",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "my_table"
+                    },
+                    {
+                        "name": "gid",
+                        "in": "path",
+                        "description": "Primary key value of a feature, or a comma separated list. Omit to list.",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "42"
+                    },
+                    {
+                        "name": "all",
+                        "in": "query",
+                        "description": "List every item, not only those the caller can move forward.",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        },
+                        "example": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ok",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        {
+                                            "$ref": "#/components/schemas/WorkflowItem"
+                                        },
+                                        {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/WorkflowItem"
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "The caller has no role in the workflow of the table (NO_WORKFLOW_ROLE)"
+                    },
+                    "404": {
+                        "description": "The table or an item does not exist (TABLE_NOT_FOUND, WORKFLOW_ITEM_NOT_FOUND)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "patch": {
+                "tags": [
+                    "Workflow"
+                ],
+                "summary": "Approve workflow items",
+                "description": "Approve: sign the feature(s) with the caller's workflow role and move them to that role's status (author: drafted, reviewer: reviewed, publisher and the database owner: published). The state before the step is kept as an ended version. Takes no body. With a list of ids it is all or nothing.",
+                "operationId": "patchWorkflowItem",
+                "parameters": [
+                    {
+                        "name": "schema",
+                        "in": "path",
+                        "description": "Schema name",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "my_schema"
+                    },
+                    {
+                        "name": "table",
+                        "in": "path",
+                        "description": "Table name",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "my_table"
+                    },
+                    {
+                        "name": "gid",
+                        "in": "path",
+                        "description": "Primary key value of a feature, or a comma separated list.",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "42"
+                    }
+                ],
+                "responses": {
+                    "303": {
+                        "description": "Approved"
+                    },
+                    "403": {
+                        "description": "The caller has no role in the workflow of the table (NO_WORKFLOW_ROLE)"
+                    },
+                    "404": {
+                        "description": "The table or a feature does not exist (TABLE_NOT_FOUND, FEATURE_NOT_FOUND)"
+                    },
+                    "409": {
+                        "description": "The feature is already at or past the caller's status (WORKFLOW_STATUS_CONFLICT), is an ended version (VERSION_ENDED), or the table has no workflow (WORKFLOW_NOT_ENABLED)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v4/workflow-log": {
+            "get": {
+                "tags": [
+                    "Workflow"
+                ],
+                "summary": "Get the workflow log",
+                "description": "Get the workflow log across tables, newest first: every step logged by an edit or an approval on a workflow table. The database owner gets the whole log; a sub-user the entries of the tables they have a workflow role on (none: an empty array). To send a feature on in the flow, approve it with PATCH /api/v4/schemas/{schema}/tables/{table}/workflow-items/{gid}, using the entry's schema, table and gid.",
+                "operationId": "getWorkflowLog",
+                "parameters": [
+                    {
+                        "name": "schema",
+                        "in": "query",
+                        "description": "Only entries of tables in this schema.",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "my_schema"
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Number of entries to return (1-1000).",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 100,
+                            "maximum": 1000,
+                            "minimum": 1
+                        },
+                        "example": 100
+                    },
+                    {
+                        "name": "offset",
+                        "in": "query",
+                        "description": "Number of entries to skip.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 0,
+                            "minimum": 0
+                        },
+                        "example": 0
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ok",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/WorkflowLogEntry"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Missing or invalid token, or a malformed parameter (INVALID_REQUEST)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v4/schemas/{schema}/tables/{table}/workflow-roles": {
+            "get": {
+                "tags": [
+                    "Workflow"
+                ],
+                "summary": "Get workflow roles",
+                "description": "Get the workflow roles of the sub-users on a table. Only sub-users that have been given a role are listed.",
+                "operationId": "getWorkflowRoles",
+                "parameters": [
+                    {
+                        "name": "schema",
+                        "in": "path",
+                        "description": "Schema name",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "my_schema"
+                    },
+                    {
+                        "name": "table",
+                        "in": "path",
+                        "description": "Table name",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "my_table"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ok",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/WorkflowRole"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "The table does not exist (TABLE_NOT_FOUND)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "patch": {
+                "tags": [
+                    "Workflow"
+                ],
+                "summary": "Set workflow roles",
+                "description": "Set the workflow role of one or more sub-users on a table. Sub-users not named keep their role. Only the database owner can set roles.",
+                "operationId": "patchWorkflowRoles",
+                "parameters": [
+                    {
+                        "name": "schema",
+                        "in": "path",
+                        "description": "Schema name",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "my_schema"
+                    },
+                    {
+                        "name": "table",
+                        "in": "path",
+                        "description": "Table name",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "my_table"
+                    }
+                ],
+                "requestBody": {
+                    "description": "Role(s) to set.",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "oneOf": [
+                                    {
+                                        "$ref": "#/components/schemas/WorkflowRole"
+                                    },
+                                    {
+                                        "type": "array",
+                                        "items": {
+                                            "$ref": "#/components/schemas/WorkflowRole"
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "303": {
+                        "description": "Roles updated"
+                    },
+                    "400": {
+                        "description": "Bad request"
+                    },
+                    "403": {
+                        "description": "Only the database owner can set roles (SUPER_USER_ONLY)"
+                    },
+                    "404": {
+                        "description": "The table does not exist (TABLE_NOT_FOUND)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         }
     },
@@ -10692,6 +11096,16 @@
                         "type": "string",
                         "example": "my-column"
                     },
+                    "versioning": {
+                        "description": "Whether the table is versioned. Set with PATCH (database owner only).",
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "workflow": {
+                        "description": "Whether the table has workflow. Set with PATCH (database owner only); needs versioning.",
+                        "type": "boolean",
+                        "example": false
+                    },
                     "_type": {
                         "description": "Read-only. TABLE, VIEW or MATERIALIZED VIEW.",
                         "type": "string",
@@ -11135,6 +11549,260 @@
                     }
                 },
                 "type": "object"
+            },
+            "WorkflowItem": {
+                "description": "Where one feature stands in the workflow of its table: its latest logged step.",
+                "required": [
+                    "schema",
+                    "table",
+                    "gid",
+                    "version_gid",
+                    "status",
+                    "status_name",
+                    "operation",
+                    "user",
+                    "author",
+                    "reviewer",
+                    "publisher",
+                    "created"
+                ],
+                "properties": {
+                    "schema": {
+                        "description": "Schema of the feature's table.",
+                        "type": "string",
+                        "example": "my_schema"
+                    },
+                    "table": {
+                        "description": "The feature's table. With `schema` and `gid` it addresses the item: PATCH /api/v4/schemas/{schema}/tables/{table}/workflow-items/{gid} approves it.",
+                        "type": "string",
+                        "example": "my_table"
+                    },
+                    "gid": {
+                        "description": "The feature's primary key value. The id of the item in the path.",
+                        "type": "integer",
+                        "example": 42
+                    },
+                    "version_gid": {
+                        "description": "The feature's version id (gc2_version_gid), the same across all versions of the feature.",
+                        "type": "integer",
+                        "example": 17
+                    },
+                    "status": {
+                        "description": "1 drafted, 2 reviewed, 3 published.",
+                        "type": "integer",
+                        "enum": [
+                            1,
+                            2,
+                            3
+                        ],
+                        "example": 1
+                    },
+                    "status_name": {
+                        "type": "string",
+                        "enum": [
+                            "drafted",
+                            "reviewed",
+                            "published"
+                        ],
+                        "example": "drafted"
+                    },
+                    "operation": {
+                        "description": "What the latest step was.",
+                        "type": "string",
+                        "enum": [
+                            "insert",
+                            "update",
+                            "delete"
+                        ],
+                        "example": "insert"
+                    },
+                    "user": {
+                        "description": "Who made the latest step.",
+                        "type": "string",
+                        "example": "joe"
+                    },
+                    "author": {
+                        "description": "Who signed as author, or null.",
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "example": "joe"
+                    },
+                    "reviewer": {
+                        "description": "Who signed as reviewer, or null.",
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "example": null
+                    },
+                    "publisher": {
+                        "description": "Who signed as publisher, or null.",
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "example": null
+                    },
+                    "created": {
+                        "description": "When the latest step was made.",
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-11-27 10:15:00+00"
+                    }
+                },
+                "type": "object"
+            },
+            "WorkflowLogEntry": {
+                "description": "One logged workflow step of a feature.",
+                "required": [
+                    "id",
+                    "schema",
+                    "table",
+                    "gid",
+                    "version_gid",
+                    "status",
+                    "status_name",
+                    "operation",
+                    "user",
+                    "author",
+                    "reviewer",
+                    "publisher",
+                    "created",
+                    "roles"
+                ],
+                "properties": {
+                    "id": {
+                        "description": "Id of the log entry.",
+                        "type": "integer",
+                        "example": 311
+                    },
+                    "schema": {
+                        "description": "Schema of the feature's table.",
+                        "type": "string",
+                        "example": "my_schema"
+                    },
+                    "table": {
+                        "description": "The feature's table.",
+                        "type": "string",
+                        "example": "my_table"
+                    },
+                    "gid": {
+                        "description": "The feature's primary key value. With `schema` and `table`: PATCH /api/v4/schemas/{schema}/tables/{table}/workflow-items/{gid} approves the feature.",
+                        "type": "integer",
+                        "example": 42
+                    },
+                    "version_gid": {
+                        "description": "The feature's version id (gc2_version_gid), the same across all versions of the feature.",
+                        "type": "integer",
+                        "example": 17
+                    },
+                    "status": {
+                        "description": "The status this step gave the feature: 1 drafted, 2 reviewed, 3 published.",
+                        "type": "integer",
+                        "enum": [
+                            1,
+                            2,
+                            3
+                        ],
+                        "example": 1
+                    },
+                    "status_name": {
+                        "type": "string",
+                        "enum": [
+                            "drafted",
+                            "reviewed",
+                            "published"
+                        ],
+                        "example": "drafted"
+                    },
+                    "operation": {
+                        "description": "What the step was.",
+                        "type": "string",
+                        "enum": [
+                            "insert",
+                            "update",
+                            "delete"
+                        ],
+                        "example": "insert"
+                    },
+                    "user": {
+                        "description": "Who made the step.",
+                        "type": "string",
+                        "example": "joe"
+                    },
+                    "author": {
+                        "description": "Who had signed as author after this step, or null.",
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "example": "joe"
+                    },
+                    "reviewer": {
+                        "description": "Who had signed as reviewer after this step, or null.",
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "example": null
+                    },
+                    "publisher": {
+                        "description": "Who had signed as publisher after this step, or null.",
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "example": null
+                    },
+                    "created": {
+                        "description": "When the step was made.",
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-11-27 10:15:00+00"
+                    },
+                    "roles": {
+                        "description": "The workflow roles on the table when the step was made: sub-user => role.",
+                        "type": "object",
+                        "example": {
+                            "joe": "author",
+                            "ann": "reviewer"
+                        },
+                        "additionalProperties": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "WorkflowRole": {
+                "description": "The workflow role of one sub-user on a table.",
+                "required": [
+                    "subuser",
+                    "role"
+                ],
+                "properties": {
+                    "subuser": {
+                        "title": "Sub-user",
+                        "description": "Sub-user name.",
+                        "type": "string",
+                        "example": "joe"
+                    },
+                    "role": {
+                        "title": "Role",
+                        "description": "author: edits become drafts. reviewer: edits and approvals count as reviewed. publisher: edits and approvals are published. none: no part in the workflow; the sub-user sees published features only and cannot edit the table.",
+                        "type": "string",
+                        "enum": [
+                            "none",
+                            "author",
+                            "reviewer",
+                            "publisher"
+                        ],
+                        "example": "reviewer"
+                    }
+                },
+                "type": "object"
             }
         },
         "securitySchemes": {
@@ -11280,6 +11948,10 @@
         {
             "name": "Wfs",
             "description": "Wfs"
+        },
+        {
+            "name": "Workflow",
+            "description": "Workflow"
         }
     ]
 }

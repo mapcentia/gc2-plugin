@@ -1,6 +1,6 @@
 ---
 name: gc2-privileges
-description: Sub-user privileges and rights inheritance for GC2 BaaS, including per-table privilege grants, group membership via user_group, transitive inheritance where the highest privilege wins, schema ownership, and layer authentication levels.
+description: Sub-user privileges and rights inheritance for GC2 BaaS, including per-table privilege grants, group membership via user_group, transitive inheritance where the highest privilege wins, schema ownership, and layer authentication levels. Also the token-less metadata read (getMetaDataPublic, /api/v4/meta/database/{database}) and how workflow roles relate to privileges.
 ---
 
 # Privileges and Rights Inheritance
@@ -49,6 +49,19 @@ Orthogonal to per-user grants, each layer has an `authentication` level (capital
 | `Read` / `None` | Read open | No per-user enforcement on read |
 
 OGC endpoints are merged, database-qualified routes (`/api/v4/ows/schema/{schema}/database/{database}`, `/api/v4/wfs/schema/{schema}/database/{database}/srs/...`; the old token-only variants are removed). Auth is decided per request: Bearer token (must match `{database}`, else 401 — never a silent anonymous downgrade), anonymous for publicly readable layers, or an HTTP Basic challenge for protected layers. WFS-T always requires credentials with `write`.
+
+## Workflow roles
+
+On a table with workflow, a per-table workflow role (`author`, `reviewer`, `publisher`, `none`) applies on top of the privileges here: it decides the status a sub-user's edits get, a sub-user without a role reads published features only and cannot edit, and access to the workflow items is by role, not schema ownership. Roles are set with `patchWorkflowRoles` — see `gc2-workflow`.
+
+## Anonymous metadata (`getMetaDataPublic`)
+
+`GET /api/v4/meta/database/{database}/{query}` returns relation metadata **without a token** — the same shape as `getMetaData`: `{ "relations": { "<schema.table>": {...} } }`.
+
+- `query` is optional: a relation, a schema, `tag:name` or a comma list; omitted = the whole database. `noRestriction` works as on `getMetaData`.
+- It is always the anonymous view: relations with authentication level `Read/write` are left out, **also when a token is sent**. Use `getMetaData` for the authenticated view.
+- Nothing matching → `200` with `"relations": []` (an empty array, not an object). Unknown database → `404 DATABASE_NOT_FOUND`.
+- Local GeoCloud2 `master` as of 2026-11-27, not deployed; MCP tool in `@mapcentia/gc2-mcp-server` 1.2.13+.
 
 ## Common mistakes
 
