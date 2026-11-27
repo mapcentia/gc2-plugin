@@ -22,6 +22,8 @@ Lives on the GeoCloud2 branch `dev/multiple_styles` (commits `25900b64`…`844d8
 | Update | `PATCH .../features/{feature}` (key optional) / `patchFeature` | `303 See Other` + `Location`; `404` `FEATURE_NOT_FOUND` if nothing updated |
 | Delete | `DELETE .../features/{feature}` (one key **or a comma list**, like GET) / `deleteFeature` | `204`; `404` `FEATURE_NOT_FOUND` if nothing was deleted (partial matches delete the found ones → `204`) |
 
+Writes to a layer that is not editable answer `403` `LAYER_NOT_EDITABLE` on POST, PATCH and DELETE (newer backends; older ones skip the write silently and answer e.g. `400` `NOTHING_INSERTED`).
+
 No PUT/upsert. No collection GET — reading a whole table is a SQL API or WFS job (`GET .../features` without a key → 400 `FEATURE_ID_REQUIRED`). Keys containing `'` are rejected (400 `INVALID_FEATURE_ID`).
 
 ## Body and write rules

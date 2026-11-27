@@ -1102,6 +1102,9 @@
                     "204": {
                         "description": "Deleted"
                     },
+                    "403": {
+                        "description": "The layer is not editable (LAYER_NOT_EDITABLE)"
+                    },
                     "404": {
                         "description": "No features found"
                     }
@@ -1174,6 +1177,9 @@
                     "400": {
                         "description": "Bad request"
                     },
+                    "403": {
+                        "description": "The layer is not editable (LAYER_NOT_EDITABLE)"
+                    },
                     "404": {
                         "description": "Feature not found"
                     }
@@ -1237,6 +1243,9 @@
                     },
                     "400": {
                         "description": "Bad request"
+                    },
+                    "403": {
+                        "description": "The layer is not editable (LAYER_NOT_EDITABLE)"
                     }
                 }
             }
@@ -2762,6 +2771,9 @@
                     },
                     "401": {
                         "description": "The token is not valid for this database, or the Basic credentials are wrong"
+                    },
+                    "404": {
+                        "description": "The database does not exist (DATABASE_NOT_FOUND)"
                     }
                 },
                 "security": [
@@ -5003,7 +5015,7 @@
                 "tags": [
                     "Search"
                 ],
-                "description": "Search the relation's OpenSearch index. The query string is passed to OpenSearch _search (URI search) unaltered, so any _search URI parameter works; the common ones are listed. A JSON body, if sent, takes precedence over the query string. Sub users need read access to the relation.",
+                "description": "Search the relation's OpenSearch index. The query string is passed to OpenSearch _search (URI search) unaltered, so any _search URI parameter works; the common ones are listed. A JSON body, if sent, takes precedence over the query string. Sub users need a read privilege on the relation and are refused if a geofence deny or limit rule matches them, since the index cannot apply row filters.",
                 "operationId": "search",
                 "parameters": [
                     {
@@ -5119,7 +5131,7 @@
                         "description": "Invalid query (SEARCH_ERROR)"
                     },
                     "403": {
-                        "description": "No read access to the relation"
+                        "description": "No read privilege on the relation (INSUFFICIENT_PRIVILEGES), or a geofence deny/limit rule matches the caller (GEOFENCE_RULES_APPLY)"
                     },
                     "404": {
                         "description": "Relation not found, or no search index has been built for it (INDEX_NOT_FOUND)"
@@ -5130,7 +5142,7 @@
                 "tags": [
                     "Search"
                 ],
-                "description": "(Re)build the OpenSearch index from the table/view: drops any existing index, creates it with the database's analysis settings (see /api/v4/search/settings) and a mapping derived from the columns, bulk indexes all rows and refreshes the index so it is searchable immediately. The relation must have a primary key. No request body. Database owner only.",
+                "description": "(Re)build the OpenSearch index from the table/view: drops any existing index, creates it with the database's analysis settings (see /api/v4/search/settings) and a mapping derived from the columns, with per-column overrides (type, analyzer, search_analyzer, ...) taken from the relation's 'elasticsearch' metadata (PATCH /api/v4/meta), bulk indexes all rows and refreshes the index so it is searchable immediately. The relation must have a primary key. No request body. Database owner only.",
                 "operationId": "buildSearchIndex",
                 "parameters": [
                     {
@@ -5180,7 +5192,7 @@
                 "tags": [
                     "Search"
                 ],
-                "description": "Search the relation's OpenSearch index with a query DSL body. The body is passed to OpenSearch _search unaltered. Sub users need read access to the relation.",
+                "description": "Search the relation's OpenSearch index with a query DSL body. The body is passed to OpenSearch _search unaltered. Sub users need a read privilege on the relation and are refused if a geofence deny or limit rule matches them, since the index cannot apply row filters.",
                 "operationId": "searchPost",
                 "parameters": [
                     {
@@ -5230,7 +5242,7 @@
                         "description": "Invalid query (SEARCH_ERROR)"
                     },
                     "403": {
-                        "description": "No read access to the relation"
+                        "description": "No read privilege on the relation (INSUFFICIENT_PRIVILEGES), or a geofence deny/limit rule matches the caller (GEOFENCE_RULES_APPLY)"
                     },
                     "404": {
                         "description": "Relation not found, or no search index has been built for it (INDEX_NOT_FOUND)"
@@ -8619,8 +8631,56 @@
                                     }
                                 },
                                 "elasticsearch": {
-                                    "description": "Per-column Elasticsearch/OpenSearch mapping config (elasticsearchtype/analyzer/search_analyzer per column). Consumed when the Search API (re)builds the index.",
-                                    "type": "object"
+                                    "description": "Per-column OpenSearch mapping overrides, keyed by column name. Consumed when the Search API (PUT /api/v4/schemas/{schema}/tables/{table}/search) (re)builds the index: each column gets the mapping derived from its PostgreSQL type, and the members given here override or extend it. Columns not listed keep the derived mapping. Any other OpenSearch field-mapping parameter (normalizer, doc_values, copy_to, ...) is passed through as well. Analyzers must exist in the database analysis settings (PUT /api/v4/search/settings). A PATCH replaces the whole block for the relation; an empty object {} clears it.",
+                                    "type": "object",
+                                    "example": {
+                                        "name": {
+                                            "elasticsearchtype": "text",
+                                            "analyzer": "auto_complete_analyzer",
+                                            "search_analyzer": "auto_complete_search_analyzer"
+                                        }
+                                    },
+                                    "additionalProperties": {
+                                        "properties": {
+                                            "elasticsearchtype": {
+                                                "description": "OpenSearch field type. Defaults to the type derived from the column.",
+                                                "type": "string",
+                                                "example": "text"
+                                            },
+                                            "analyzer": {
+                                                "description": "Index-time (and default search-time) analyzer.",
+                                                "type": "string",
+                                                "example": "auto_complete_analyzer"
+                                            },
+                                            "search_analyzer": {
+                                                "description": "Search-time analyzer.",
+                                                "type": "string",
+                                                "example": "auto_complete_search_analyzer"
+                                            },
+                                            "index": {
+                                                "description": "Whether the field is indexed (searchable).",
+                                                "type": "boolean",
+                                                "example": true
+                                            },
+                                            "format": {
+                                                "description": "Date format (date fields).",
+                                                "type": "string",
+                                                "example": "yyyy-MM-dd"
+                                            },
+                                            "null_value": {
+                                                "description": "Value indexed in place of null."
+                                            },
+                                            "fielddata": {
+                                                "description": "Enable fielddata on a text field (sorting/aggregation).",
+                                                "type": "boolean"
+                                            },
+                                            "fields": {
+                                                "description": "Multi-fields. Text fields get {\"keyword\": {\"type\": \"keyword\", \"ignore_above\": 256}} unless this is set.",
+                                                "type": "object"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
                                 }
                             },
                             "type": "object"
