@@ -341,6 +341,11 @@ const operationMap = new Map<string, any>();
 // spec marks every field required although the server accepts any non-empty
 // subset. Their body fields are offered as optional tool input.
 const PARTIAL_BODY_TOOLS = new Set(["patchConfiguration"]);
+// Tools where a body field shares its name with a path parameter and means something
+// else (patchTable: path `schema` = where the table is, body `schema` = where to move it).
+// The body field is exposed as `body_<name>`. Other tools keep the old behaviour, where
+// the one argument is sent both in the path and in the body.
+const BODY_RENAME_TOOLS = new Set(["patchTable"]);
 
 // Binary file endpoints: their tools answer with the file's URL and HEAD
 // metadata instead of the body — a Parquet file cannot travel through an MCP
@@ -366,6 +371,9 @@ for (const [pathStr, pathItem] of Object.entries(apiSpec.paths as any)) {
             queryParams: [] as string[],
             headerParams: [] as string[],
             bodyParams: [] as string[],
+            // Tool argument name -> body field name, for body fields whose name
+            // collides with a path/query/header parameter (e.g. patchTable `schema`).
+            bodyArgNames: {} as Record<string, string>,
             isBodyFlattened: false,
             contentType: "application/json",
             binaryParams: [] as string[],
@@ -407,11 +415,23 @@ for (const [pathStr, pathItem] of Object.entries(apiSpec.paths as any)) {
                     if (resolvedValue.format === "binary") {
                         toolMeta.binaryParams.push(key);
                     }
-                    properties[key] = normalizeJsonSchemaForMCP(sanitizeSchemaForMCP(value));
-                    toolMeta.bodyParams.push(key);
+                    // A body field named like a parameter would overwrite it in the
+                    // tool input: expose it as `body_<name>` and map it back on call.
+                    const argName = key in properties && BODY_RENAME_TOOLS.has(operationId) ? `body_${key}` : key;
+                    properties[argName] = normalizeJsonSchemaForMCP(sanitizeSchemaForMCP(value));
+                    if (argName !== key) {
+                        toolMeta.bodyArgNames[argName] = key;
+                        properties[argName] = {
+                            ...properties[argName],
+                            description: `Request body field \`${key}\`. ${properties[argName]?.description || ""}`.trim(),
+                        };
+                    }
+                    toolMeta.bodyParams.push(argName);
                 }
                 if (bodySchema.required && !PARTIAL_BODY_TOOLS.has(operationId)) {
-                    required.push(...bodySchema.required);
+                    const renamed = Object.fromEntries(
+                        Object.entries(toolMeta.bodyArgNames).map(([arg, key]) => [key, arg]));
+                    required.push(...bodySchema.required.map((key: string) => renamed[key] ?? key));
                 }
             } else {
                 properties.requestBody = normalizeJsonSchemaForMCP(sanitizeSchemaForMCP(bodySchema));
@@ -520,12 +540,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                         if (fs.existsSync(value)) {
                             const fileContent = fs.readFileSync(value);
                             const blob = new Blob([fileContent]);
-                            formData.append(paramName, blob, path.basename(value));
+                            formData.append(toolMeta.bodyArgNames[paramName] ?? paramName, blob, path.basename(value));
                         } else {
-                            formData.append(paramName, value);
+                            formData.append(toolMeta.bodyArgNames[paramName] ?? paramName, value);
                         }
                     } else {
-                        formData.append(paramName, value as any);
+                        formData.append(toolMeta.bodyArgNames[paramName] ?? paramName, value as any);
                     }
                 }
             }
@@ -534,7 +554,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             const body: any = {};
             for (const paramName of toolMeta.bodyParams) {
                 if (safeArgs[paramName] !== undefined) {
-                    body[paramName] = safeArgs[paramName];
+                    body[toolMeta.bodyArgNames[paramName] ?? paramName] = safeArgs[paramName];
                 }
             }
             config.data = body;
