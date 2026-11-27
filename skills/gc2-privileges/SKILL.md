@@ -61,7 +61,7 @@ On a table with workflow, a per-table workflow role (`author`, `reviewer`, `publ
 - `query` is optional: a relation, a schema, `tag:name` or a comma list; omitted = the whole database. `noRestriction` works as on `getMetaData`.
 - It is always the anonymous view: relations with authentication level `Read/write` are left out, **also when a token is sent**. Use `getMetaData` for the authenticated view.
 - Nothing matching → `200` with `"relations": []` (an empty array, not an object). Unknown database → `404 DATABASE_NOT_FOUND`.
-- Local GeoCloud2 `master` as of 2026-11-27, not deployed; MCP tool in `@mapcentia/gc2-mcp-server` 1.2.13+.
+- Local GeoCloud2 `master` as of 2026-11-27, not deployed; MCP tool in `@mapcentia/gc2-mcp-server` 1.2.14+.
 
 ## Common mistakes
 

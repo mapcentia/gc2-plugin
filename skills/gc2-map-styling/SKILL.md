@@ -44,7 +44,7 @@ Classes, styles, and labels are converted server-side into a MapServer mapfile; 
 
 ## QGIS style (QML) or classes
 
-A layer is drawn **either** by MapServer with its classes, styles and labels, **or** by QGIS Server with a QML (the XML text of a QGIS `.qml` style file). Two top-level fields on the layer resource — next to `name`, `properties` and `classes`, *not* inside `properties` — control it. On GeoCloud2 local `master` (commit `dc08dd47`), **not deployed** as of 2026-11; MCP tools know the fields from `@mapcentia/gc2-mcp-server` 1.2.12+.
+A layer is drawn **either** by MapServer with its classes, styles and labels, **or** by QGIS Server with a QML (the XML text of a QGIS `.qml` style file). Two top-level fields on the layer resource — next to `name`, `properties` and `classes`, *not* inside `properties` — control it. On GeoCloud2 local `master` (commit `dc08dd47`), **not deployed** as of 2026-11; MCP tools know the fields from `@mapcentia/gc2-mcp-server` 1.2.14+.
 
 | Field | Meaning |
 |---|---|

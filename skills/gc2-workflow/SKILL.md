@@ -14,7 +14,7 @@ Editing features is `gc2-feature` (Feature API) and `gc2-ows` (WFS-T); table pri
 
 ## Availability
 
-On GeoCloud2 local `master` as of 2026-11-27 — **not pushed, not deployed, not on production `api.gc2.io`**. Check the target host's OpenAPI first. MCP tools ship in `@mapcentia/gc2-mcp-server` 1.2.13+.
+On GeoCloud2 local `master` as of 2026-11-27 — **not pushed, not deployed, not on production `api.gc2.io`**. Check the target host's OpenAPI first. MCP tools ship in `@mapcentia/gc2-mcp-server` 1.2.14+.
 
 ## Switching on and off (`getTable` / `patchTable`)
 
