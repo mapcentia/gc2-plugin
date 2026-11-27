@@ -340,12 +340,14 @@ const operationMap = new Map<string, any>();
 // PATCH operations whose OpenAPI body reuses the full resource schema, so the
 // spec marks every field required although the server accepts any non-empty
 // subset. Their body fields are offered as optional tool input.
-const PARTIAL_BODY_TOOLS = new Set(["patchConfiguration"]);
+const PARTIAL_BODY_TOOLS = new Set(["patchConfiguration", "patchRpc", "patchFunctions"]);
 // Tools where a body field shares its name with a path parameter and means something
-// else (patchTable: path `schema` = where the table is, body `schema` = where to move it).
+// else: the path names the existing resource, the body field moves or renames it
+// (patchTable `schema`, patchClient/patchRule `id`, patchRpc `method`, patchFunctions `name`).
 // The body field is exposed as `body_<name>`. Other tools keep the old behaviour, where
-// the one argument is sent both in the path and in the body.
-const BODY_RENAME_TOOLS = new Set(["patchTable"]);
+// the one argument is sent both in the path and in the body (patchUser: the server
+// ignores `name` in the body).
+const BODY_RENAME_TOOLS = new Set(["patchTable", "patchClient", "patchRule", "patchRpc", "patchFunctions"]);
 
 // Binary file endpoints: their tools answer with the file's URL and HEAD
 // metadata instead of the body — a Parquet file cannot travel through an MCP
