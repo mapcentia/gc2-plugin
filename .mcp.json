@@ -2,7 +2,7 @@
   "mcpServers": {
     "gc2": {
       "command": "npx",
-      "args": ["-y", "https://registry.npmjs.org/@mapcentia/gc2-mcp-server/-/gc2-mcp-server-1.2.9.tgz"]
+      "args": ["-y", "https://registry.npmjs.org/@mapcentia/gc2-mcp-server/-/gc2-mcp-server-1.2.10.tgz"]
     }
   }
 }

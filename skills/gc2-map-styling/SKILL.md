@@ -78,7 +78,7 @@ Classes, styles, and labels are converted server-side into a MapServer mapfile; 
 
 ## Symbols and legends
 
-On GeoCloud2 local `master` (commits `fef28f9e`, `21d0c44b`), **not deployed** as of 2026-11 — expect `404`/`406` on other hosts. MCP tools in `@mapcentia/gc2-mcp-server` 1.2.9+. Both are read-only.
+On GeoCloud2 local `master` (commits `fef28f9e`, `21d0c44b`), **not deployed** as of 2026-11 — expect `404`/`406` on other hosts. MCP tools in `@mapcentia/gc2-mcp-server` 1.2.10+. Both are read-only.
 
 **`getSymbol`** — `GET /api/v4/symbols/{name}`. Bearer token; sub-users allowed.
 
