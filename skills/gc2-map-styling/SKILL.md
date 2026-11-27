@@ -1,6 +1,6 @@
 ---
 name: gc2-map-styling
-description: Map view configuration and layer cartography for GC2 BaaS, including per-schema map center/zoom/extent, layers, classes, styles, and labels, MapServer-backed rendering, id round-trip rules, and payload value conventions.
+description: Map view configuration and layer cartography for GC2 BaaS, including per-schema map center/zoom/extent, layers, classes, styles, and labels, MapServer-backed rendering, id round-trip rules, and payload value conventions. Also the built-in symbols a style can name (getSymbol, /api/v4/symbols) and layer legends with class icons (getLegend, /api/v4/legends).
 ---
 
 # Map, Layers, Classes, Styles, and Labels
@@ -68,13 +68,33 @@ Classes, styles, and labels are converted server-side into a MapServer mapfile; 
 |---|---|
 | style `linecap` | `round` `butt` `square` |
 | style `geomtransform` | `bbox` `centroid` `end` `labelpnt` `labelpoly` `start` `vertices` |
-| style `symbol` (built-ins) | `circle` `square` `triangle` `hatch1` `dashed1` `dot-dot` `dashed-line-short` `dashed-line-long` `dash-dot` `dash-dot-dot` `arrow` `arrow2` |
+| style `symbol` (built-ins) | `triangle` `circle` `square` `star` `hatch1` `dashed1` `arrow` `arrow2` `continue` `dashed-line-short` `dashed-line-long` `dash-dot` `dash-dot-dot` `dot-dot` — not validated; see "Symbols and legends" |
 | label `position` | `auto` `ul` `uc` `ur` `cl` `cc` `cr` `ll` `lc` `lr` |
 | label `angle` keywords | numeric, `auto`, `auto2`, `follow`, or `[column]` |
 | label `fontweight` | `normal` `bold` `italic` `bolditalic` |
 | layer `geotype` | `Default` `POINT` `LINE` `POLYGON` |
 | layer `format` | `PNG` `jpeg_low` `jpeg_medium` `jpeg_high` |
 | layer `cache` | `disk` `sqlite` `mbtiles` `s3` `memcache` (`mbtiles` holds the image tileset only; `.mvt`/`.json` stay in `sqlite`) |
+
+## Symbols and legends
+
+On GeoCloud2 local `master` (commits `fef28f9e`, `21d0c44b`), **not deployed** as of 2026-11 — expect `404`/`406` on other hosts. MCP tools in `@mapcentia/gc2-mcp-server` 1.2.9+. Both are read-only.
+
+**`getSymbol`** — `GET /api/v4/symbols/{name}`. Bearer token; sub-users allowed.
+
+- No name → array of the 14 built-in symbols, in mapfile order. One name → object; comma list → array. Unknown name → `404 SYMBOL_NOT_FOUND`.
+- Item: `{name, type: "vector" | "ellipse", filled, points: [[x, y], ...], anchorpoint?: [x, y]}` — enough to draw a preview. `vector`: `points` is an outline (y grows downwards). `ellipse`: the first point is the x/y radius, so `[[1, 1]]` is a circle.
+- `dashed1`, `continue`, `dash-dot-dot` and `dot-dot` are the **same ellipse as `circle`**: the dash look comes from the style's `pattern` and `gap`, not from the symbol.
+- A style's `symbol` is a free string and is **not limited to this list**: it may also be an http(s) image URL or a `[column]` reference.
+
+**`getLegend`** — `GET /api/v4/legends/database/{database}/{layers}`. Public route like `/api/v4/ows`: Bearer token, HTTP Basic or anonymous (see `gc2-ows` for the access model).
+
+- `{layers}`: comma separated `schema.table`; a bare `schema` means every layer of that schema.
+- Always an **array**, also for one layer: `[{id, title, classes: [{name, expression, img}]}]`. `classes` holds the layer's *named* classes in drawing order — an unnamed class gives no legend entry.
+- `img` is a base64 PNG (18×12) **without** a `data:` prefix — prepend `data:image/png;base64,` to show it; `null` when it could not be drawn. `name` is `null` for a layer whose legend is one external picture (QGIS project, external WMS, legend URL).
+- Layers the caller may not read, or that do not exist, are **left out** and the request still answers `200`. An empty array means "no readable layer among those asked for", not an error. Geofence rules do not affect legends.
+- Malformed list → `400 INVALID_REQUEST`; token for another database → `401 TOKEN_DATABASE_MISMATCH`.
+- Replaces the legacy `/api/v1/legend/json` (unchanged). Use it to check what a class edit looks like without rendering a map.
 
 ## Scale gates (all "Numeric value stored as a string")
 

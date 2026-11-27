@@ -17,7 +17,7 @@ Use the smallest matching skill set for the task.
 | `gc2-types-formats` | Choosing PostgreSQL types, casts, `type_hints`, `type_formats`, output formats |
 | `gc2-file-import` | Importing files with `postFileUpload` and `postFileProcess` |
 | `gc2-openapi-docs` | Using OpenAPI/docs as fallback when MCP/SDK are insufficient |
-| `gc2-map-styling` | Configuring map center/zoom/extent or layer cartography: classes, styles, labels |
+| `gc2-map-styling` | Configuring map center/zoom/extent or layer cartography: classes, styles, labels; built-in symbols and layer legends |
 | `gc2-privileges` | Granting sub-user privileges, groups, rights inheritance, layer authentication levels |
 | `gc2-keyvalue` | Storing/reading JSON state (settings, flags, preferences) in the key/value store |
 | `gc2-configurations` | Managing Vidi configurations (Dashboard "Configurations") and the anonymous published `.json` for Vidi |

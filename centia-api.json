@@ -2713,6 +2713,65 @@
                 }
             }
         },
+        "/api/v4/legends/database/{database}/{layers}": {
+            "get": {
+                "tags": [
+                    "Legend"
+                ],
+                "summary": "Get layer legends",
+                "description": "Get the legends of one or more layers: for each layer its title and its named classes, each with a small PNG icon. Accepts a Bearer token, HTTP Basic or no credentials. A layer the caller may not read, or that does not exist, is left out of the result; the request itself still succeeds, so the answer is always an array and may be empty. Geofence rules do not affect legends.",
+                "operationId": "getLegend",
+                "parameters": [
+                    {
+                        "name": "database",
+                        "in": "path",
+                        "description": "Database name",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "my_database"
+                    },
+                    {
+                        "name": "layers",
+                        "in": "path",
+                        "description": "Comma separated list of layers as `schema.table`. A bare `schema` stands for all layers of that schema.",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "my_schema.roads,my_schema.buildings"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ok",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Legend"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Malformed layer list (INVALID_REQUEST)"
+                    },
+                    "401": {
+                        "description": "The token is not valid for this database, or the Basic credentials are wrong"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    },
+                    {}
+                ]
+            }
+        },
         "/api/v4/map/schema/{schema}": {
             "get": {
                 "tags": [
@@ -6096,6 +6155,61 @@
                 }
             }
         },
+        "/api/v4/symbols/{name}": {
+            "get": {
+                "tags": [
+                    "Symbols"
+                ],
+                "summary": "Get built-in symbols",
+                "description": "Get the built-in MapServer symbols a style's `symbol` can name, with type and points so a client can draw a preview. Omit the name to list all, in the order the mapfile defines them. Several line symbols (dashed1, continue, dash-dot-dot, dot-dot) are the same ellipse as circle: their dash look comes from the style's `pattern` and `gap`. A style's `symbol` is not limited to this list; it may also be an image URL or a `[column]` reference.",
+                "operationId": "getSymbol",
+                "parameters": [
+                    {
+                        "name": "name",
+                        "in": "path",
+                        "description": "Symbol name, or a comma separated list of names. Omit to list all.",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "arrow"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ok",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        {
+                                            "$ref": "#/components/schemas/Symbol"
+                                        },
+                                        {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Symbol"
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Missing or invalid token, or a malformed name (INVALID_REQUEST)"
+                    },
+                    "404": {
+                        "description": "A named symbol does not exist (SYMBOL_NOT_FOUND)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/v4/schemas/{schema}/tables/{table}": {
             "get": {
                 "tags": [
@@ -8326,6 +8440,69 @@
                 },
                 "type": "object"
             },
+            "LegendClass": {
+                "description": "One entry of a layer's legend.",
+                "required": [
+                    "name",
+                    "expression",
+                    "img"
+                ],
+                "properties": {
+                    "name": {
+                        "description": "Class name. Null for the single picture of a layer whose legend comes from an external source (external WMS, QGIS project or the layer's own legend URL).",
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "example": "Motorvej"
+                    },
+                    "expression": {
+                        "description": "The class expression (MapServer EXPRESSION), or null when the class has none.",
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "example": "[type]='motorvej'"
+                    },
+                    "img": {
+                        "description": "The icon as a base64 encoded PNG (no `data:` prefix). Null when it could not be drawn, for example before the layer's mapfile is written.",
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "example": "iVBORw0KGgoAAAANSUhEUgAAABIAAAAM"
+                    }
+                },
+                "type": "object"
+            },
+            "Legend": {
+                "description": "The legend of one layer.",
+                "required": [
+                    "id",
+                    "title",
+                    "classes"
+                ],
+                "properties": {
+                    "id": {
+                        "description": "The layer as schema qualified relation name.",
+                        "type": "string",
+                        "example": "my_schema.my_table"
+                    },
+                    "title": {
+                        "description": "The layer's title, or its table name when it has none.",
+                        "type": "string",
+                        "example": "Roads"
+                    },
+                    "classes": {
+                        "description": "The named classes of the layer in drawing order. Empty when the layer has no named classes.",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/LegendClass"
+                        }
+                    }
+                },
+                "type": "object"
+            },
             "Map": {
                 "description": "Per-schema map view configuration (initial center, zoom and extent).",
                 "properties": {
@@ -10239,7 +10416,7 @@
                     },
                     "symbol": {
                         "title": "Symbol",
-                        "description": "Name of the MapServer SYMBOL to draw: a built-in vector symbol (circle, square, triangle, hatch1, dashed1, dot-dot, dashed-line-short, dashed-line-long, dash-dot, dash-dot-dot, arrow, arrow2) or a custom symbol defined in the map's SYMBOLSET. Maps to STYLE SYMBOL. Empty draws a plain fill/line with no symbol.",
+                        "description": "What to draw as the MapServer SYMBOL: the name of a built-in symbol (triangle, circle, square, star, hatch1, dashed1, arrow, arrow2, continue, dashed-line-short, dashed-line-long, dash-dot, dash-dot-dot, dot-dot; listed with their geometry by GET /api/v4/symbols), the http(s) URL of an image, or a [column] reference for a data-driven symbol. The value is not validated against the built-in names. Maps to STYLE SYMBOL. Empty draws a plain fill/line with no symbol.",
                         "type": "string",
                         "example": "circle"
                     },
@@ -10334,6 +10511,96 @@
                         "description": "Angle (counter-clockwise), in degrees, component of a polar-coordinate offset. Maps to the angle component of STYLE POLAROFFSET. Numeric value stored as a string.",
                         "type": "string",
                         "example": "0"
+                    }
+                },
+                "type": "object"
+            },
+            "Symbol": {
+                "description": "A built-in MapServer symbol. `name` is the value to put in a style's `symbol`.",
+                "required": [
+                    "name",
+                    "type",
+                    "filled",
+                    "points"
+                ],
+                "properties": {
+                    "name": {
+                        "description": "Symbol name: exactly the value a style's `symbol` takes.",
+                        "type": "string",
+                        "example": "arrow"
+                    },
+                    "type": {
+                        "description": "MapServer SYMBOL TYPE. `vector`: `points` is an outline in the symbol's own coordinate space (y grows downwards). `ellipse`: the first point is the x and y radius, so `[[1, 1]]` is a circle.",
+                        "type": "string",
+                        "enum": [
+                            "vector",
+                            "ellipse"
+                        ],
+                        "example": "vector"
+                    },
+                    "filled": {
+                        "description": "Whether the shape is filled (MapServer FILLED) or only stroked.",
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "points": {
+                        "description": "The symbol's POINTS as [x, y] pairs, in mapfile order.",
+                        "type": "array",
+                        "items": {
+                            "type": "array",
+                            "items": {
+                                "type": "number"
+                            },
+                            "maxItems": 2,
+                            "minItems": 2
+                        },
+                        "example": [
+                            [
+                                0,
+                                0.4
+                            ],
+                            [
+                                3,
+                                0.4
+                            ],
+                            [
+                                3,
+                                0
+                            ],
+                            [
+                                5,
+                                0.8
+                            ],
+                            [
+                                3,
+                                1.6
+                            ],
+                            [
+                                3,
+                                1.2
+                            ],
+                            [
+                                0,
+                                1.2
+                            ],
+                            [
+                                0,
+                                0.4
+                            ]
+                        ]
+                    },
+                    "anchorpoint": {
+                        "description": "MapServer ANCHORPOINT as [x, y] fractions of the symbol's extent. Only present on symbols that define one.",
+                        "type": "array",
+                        "items": {
+                            "type": "number"
+                        },
+                        "maxItems": 2,
+                        "minItems": 2,
+                        "example": [
+                            0,
+                            0.5
+                        ]
                     }
                 },
                 "type": "object"
@@ -10864,6 +11131,10 @@
             "description": "Layer"
         },
         {
+            "name": "Legend",
+            "description": "Legend"
+        },
+        {
             "name": "Map",
             "description": "Map"
         },
@@ -10914,6 +11185,10 @@
         {
             "name": "Stats",
             "description": "Stats"
+        },
+        {
+            "name": "Symbols",
+            "description": "Symbols"
         },
         {
             "name": "Tileseeder",
