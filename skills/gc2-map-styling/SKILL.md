@@ -93,7 +93,7 @@ On GeoCloud2 local `master` (commits `fef28f9e`, `21d0c44b`), **not deployed** a
 - Always an **array**, also for one layer: `[{id, title, classes: [{name, expression, img}]}]`. `classes` holds the layer's *named* classes in drawing order — an unnamed class gives no legend entry.
 - `img` is a base64 PNG (18×12) **without** a `data:` prefix — prepend `data:image/png;base64,` to show it; `null` when it could not be drawn. `name` is `null` for a layer whose legend is one external picture (QGIS project, external WMS, legend URL).
 - Layers the caller may not read, or that do not exist, are **left out** and the request still answers `200`. An empty array means "no readable layer among those asked for", not an error. Geofence rules do not affect legends.
-- Malformed list → `400 INVALID_REQUEST`; token for another database → `401 TOKEN_DATABASE_MISMATCH`.
+- Malformed list → `400 INVALID_REQUEST`; token for another database → `401 TOKEN_DATABASE_MISMATCH`; unknown `{database}` → `404 DATABASE_NOT_FOUND` (unlike unknown layers, which are just left out).
 - Replaces the legacy `/api/v1/legend/json` (unchanged). Use it to check what a class edit looks like without rendering a map.
 
 ## Scale gates (all "Numeric value stored as a string")

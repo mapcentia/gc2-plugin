@@ -48,6 +48,7 @@ Same per-layer model as WMS/WFS (`gc2-privileges`): anonymous callers read layer
 | Situation | Status |
 |---|---|
 | Unknown collection or feature | 404 `COLLECTION_NOT_FOUND` / `FEATURE_NOT_FOUND` |
+| Unknown `{database}` in the path | 404 `DATABASE_NOT_FOUND` (older servers: 400 with the database driver's message). Other database errors stay 400 with `sql_state` |
 | Existing `Read/write` collection, no credentials | 401 `UNAUTHORIZED` + `WWW-Authenticate: Basic` |
 | Existing `Read/write` collection, identity without privilege | 403 `INSUFFICIENT_PRIVILEGES` |
 | Geofence deny | 403 `FORBIDDEN` |
